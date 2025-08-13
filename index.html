@@ -2,132 +2,131 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<title>LIPNÍK ŽIJE!</title>
+<title>LIPNÍK ŽIJE! – Kalendář akcí</title>
 <style>
     body {
         font-family: Arial, sans-serif;
         display: flex;
         margin: 0;
         height: 100vh;
-        background-color: #111;
-        color: white;
+        background: #f5f5f5;
     }
     #calendar {
         flex: 1;
         padding: 20px;
         overflow-y: auto;
-        background-color: #222;
+        background: white;
+        box-shadow: 2px 0 5px rgba(0,0,0,0.1);
     }
-    #posters {
+    #calendar h2 {
+        text-align: center;
+    }
+    .event {
+        border-bottom: 1px solid #ddd;
+        padding: 10px 0;
+    }
+    .event strong {
+        color: #333;
+    }
+    #poster {
         flex: 1;
         display: flex;
         align-items: center;
         justify-content: center;
-        background-color: #000;
         position: relative;
+        background: black;
     }
-    .event {
-        margin-bottom: 15px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #444;
-    }
-    .event-date {
-        font-weight: bold;
-        color: #ffcc00;
-    }
-    .event-title {
-        font-size: 18px;
-        margin: 5px 0;
-    }
-    .event-description {
-        font-size: 14px;
-        color: #ccc;
-    }
-    #posterImage {
+    #poster img {
         max-width: 90%;
         max-height: 90%;
-        border-radius: 8px;
-        box-shadow: 0 0 15px rgba(255,255,255,0.3);
-        opacity: 1;
+        object-fit: contain;
+        opacity: 0;
         transition: opacity 1s ease-in-out;
         position: absolute;
     }
-    .fade-out {
-        opacity: 0;
+    #poster img.active {
+        opacity: 1;
     }
 </style>
 </head>
 <body>
-
-<div id="calendar">
-    <h2>Kalendář akcí</h2>
-    <div id="events">Načítám události...</div>
-</div>
-
-<div id="posters">
-    <img id="posterImage" src="" alt="Plakát">
-</div>
+    <div id="calendar">
+        <h2>Kalendář akcí</h2>
+        <div id="events">Načítám události...</div>
+    </div>
+    <div id="poster">
+        <!-- Plakáty se vloží sem -->
+    </div>
 
 <script>
-const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4XvAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/gviz/tq?tqx=out:json";
-
+const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4XvAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=csv";
 let posters = [];
-let currentPoster = 0;
+let currentPosterIndex = 0;
 
-function fetchEvents() {
-    fetch(sheetURL)
-        .then(res => res.text())
-        .then(data => {
-            const json = JSON.parse(data.substr(47).slice(0, -2));
-            const rows = json.table.rows;
-            let html = "";
-            posters = [];
+async function fetchCSV() {
+    try {
+        const res = await fetch(CSV_URL);
+        const text = await res.text();
+        const rows = text.split("\n").map(r => r.split(","));
 
-            rows.forEach(row => {
-                let date = row.c[0] ? row.c[0].f : "";
-                let title = row.c[1] ? row.c[1].v : "";
-                let description = row.c[2] ? row.c[2].v : "";
-                let posterURL = row.c[3] ? row.c[3].v : "";
+        // Vyčistit hlavičku
+        const headers = rows[0];
+        const data = rows.slice(1).filter(r => r.length >= 3);
 
-                html += `
-                    <div class="event">
-                        <div class="event-date">${date}</div>
-                        <div class="event-title">${title}</div>
-                        <div class="event-description">${description}</div>
-                    </div>
-                `;
+        let eventsHTML = "";
+        posters = [];
 
-                if (posterURL) posters.push(posterURL);
-            });
+        data.forEach(row => {
+            let date = row[0].trim();
+            let name = row[1].trim();
+            let description = row[2].trim();
+            let imageUrl = row[3] ? row[3].trim() : "";
 
-            document.getElementById("events").innerHTML = html || "Žádné akce";
-            if (posters.length > 0) {
-                currentPoster = 0;
-                document.getElementById("posterImage").src = posters[0];
+            eventsHTML += `<div class="event"><strong>${date} – ${name}</strong><br>${description}</div>`;
+
+            if (imageUrl) {
+                posters.push(imageUrl);
             }
-        })
-        .catch(err => {
-            document.getElementById("events").innerHTML = "Chyba při načítání dat";
-            console.error(err);
         });
-}
 
-function rotatePosters() {
-    if (posters.length > 0) {
-        const img = document.getElementById("posterImage");
-        img.classList.add("fade-out");
-        setTimeout(() => {
-            currentPoster = (currentPoster + 1) % posters.length;
-            img.src = posters[currentPoster];
-            img.classList.remove("fade-out");
-        }, 1000); // čas fade-out odpovídá CSS transition
+        document.getElementById("events").innerHTML = eventsHTML || "Žádné nadcházející akce";
+        renderPosters();
+    } catch (error) {
+        document.getElementById("events").innerHTML = "Chyba při načítání dat.";
+        console.error(error);
     }
 }
 
-fetchEvents();
-setInterval(rotatePosters, 5000);     // rotace plakátů
-setInterval(fetchEvents, 600000);     // obnovení dat každých 10 minut
-</script>
+function renderPosters() {
+    const posterDiv = document.getElementById("poster");
+    posterDiv.innerHTML = "";
 
+    posters.forEach((url, index) => {
+        let img = document.createElement("img");
+        img.src = url;
+        if (index === 0) img.classList.add("active");
+        posterDiv.appendChild(img);
+    });
+
+    currentPosterIndex = 0;
+}
+
+function rotatePosters() {
+    if (posters.length <= 1) return;
+    const images = document.querySelectorAll("#poster img");
+    images[currentPosterIndex].classList.remove("active");
+    currentPosterIndex = (currentPosterIndex + 1) % posters.length;
+    images[currentPosterIndex].classList.add("active");
+}
+
+// Načíst poprvé
+fetchCSV();
+
+// Rotace plakátů každých 5 sekund
+setInterval(rotatePosters, 5000);
+
+// Automatické obnovení dat každých 10 minut
+setInterval(fetchCSV, 10 * 60 * 1000);
+</script>
 </body>
 </html>
