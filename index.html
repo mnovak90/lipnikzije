@@ -1,118 +1,311 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Lipník Žije – Události</title>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>LIPNÍK ŽIJE</title>
+
 <style>
-    body {
-        margin: 0;
-        font-family: Arial, sans-serif;
-        background: url('https://mnovak90.github.io/lipnikzije/bg.jpg') no-repeat center center fixed;
-        background-size: cover;
-        display: flex;
-        height: 100vh;
-        color: #272726;
-    }
-    .left {
-        background-color: #12a537;
-        width: 30%;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: flex-start;
-        padding: 20px;
-        box-sizing: border-box;
-    }
-    .left img {
-        max-width: 80%;
-        height: auto;
-        margin-bottom: 20px;
-    }
-    .right {
-        width: 70%;
-        padding: 20px;
-        box-sizing: border-box;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-    }
-    .poster {
-        max-width: 100%;
-        max-height: 60%;
-        object-fit: contain;
-        margin-bottom: 20px;
-    }
-    .event-title {
-        font-size: 2rem;
-        font-weight: bold;
-        margin-bottom: 10px;
-    }
-    .event-place {
-        font-size: 1.5rem;
-    }
+  :root{
+    --left-bg:#272726;
+    --right-text:#272726; /* text pod plakáty */
+  }
+  html, body {
+    height: 100%;
+  }
+  body {
+    margin: 0;
+    font-family: Arial, Helvetica, sans-serif;
+    display: flex;
+    background: url("https://mnovak90.github.io/lipnikzije/bg.jpg") center/cover no-repeat fixed;
+    overflow: hidden;
+  }
+
+  /* LEVÁ STRANA – kalendář */
+  .left {
+    width: 35%;
+    min-width: 380px;
+    color: #fff;
+    background: var(--left-bg);
+    display: flex;
+    flex-direction: column;
+    box-sizing: border-box;
+    padding: 24px 20px;
+  }
+  .left .logo {
+    width: 100%;
+    max-width: 280px;
+    height: auto;
+    margin: 0 auto 16px auto;
+    display: block;
+  }
+  .left .heading {
+    text-align: center;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: .08em;
+    opacity: .9;
+    margin: 0 0 14px 0;
+  }
+  .events {
+    overflow-y: auto;
+    padding-right: 6px; /* prostor pro scrollbar */
+  }
+  .event {
+    padding: 14px 10px;
+    border-bottom: 1px solid rgba(255,255,255,.12);
+  }
+  .event:last-child { border-bottom: none; }
+
+  .event-datetime {
+    font-weight: 700;
+    font-size: 16px;
+    margin-bottom: 6px;
+  }
+  .event-title {
+    font-size: 17px;
+    line-height: 1.3;
+    margin-bottom: 4px;
+  }
+  .event-place {
+    font-size: 14px;
+    opacity: .8;
+  }
+
+  /* PRAVÁ STRANA – plakáty + text */
+  .right {
+    width: 65%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    box-sizing: border-box;
+    padding: 24px;
+    gap: 14px;
+  }
+  .poster-wrap {
+    width: min(90%, 1200px);
+    height: min(70vh, 68%);
+    display: grid;
+    place-items: center;
+    position: relative;
+  }
+  #poster {
+    max-width: 100%;
+    max-height: 100%;
+    object-fit: contain;
+    opacity: 1;
+    transition: opacity 1s ease-in-out;
+  }
+  #poster.fade-out { opacity: 0; }
+  #poster.fade-in  { opacity: 1; }
+
+  .poster-text {
+    width: min(90%, 1200px);
+    text-align: center;
+    color: var(--right-text);
+  }
+  #poster-title {
+    font-size: clamp(22px, 3.2vw, 42px);
+    font-weight: 800;
+    margin-bottom: 8px;
+  }
+  #poster-description {
+    font-size: clamp(16px, 2vw, 22px);
+    line-height: 1.4;
+  }
+
+  /* jemná úprava scrollbarů na levé straně (nepovinné) */
+  .events::-webkit-scrollbar { width: 10px; }
+  .events::-webkit-scrollbar-track { background: rgba(255,255,255,.05); }
+  .events::-webkit-scrollbar-thumb { background: rgba(255,255,255,.25); border-radius: 8px; }
 </style>
 </head>
 <body>
 
-<div class="left">
-    <img src="https://mnovak90.github.io/lipnikzije/lipnikzije-cerne.png" alt="Lipník Žije logo">
-</div>
+  <!-- LEVÁ STRANA – logo + kalendář -->
+  <aside class="left">
+    <img
+      src="https://mnovak90.github.io/lipnikzije/lipnikzije-bile.png"
+      alt="LIPNÍK ŽIJE"
+      class="logo"
+    />
+    <div class="heading">KALENDÁŘ AKCÍ</div>
+    <div id="events" class="events" aria-live="polite"></div>
+  </aside>
 
-<div class="right">
-    <img id="poster" class="poster" src="" alt="Plakát">
-    <div id="event-title" class="event-title"></div>
-    <div id="event-place" class="event-place"></div>
-</div>
+  <!-- PRAVÁ STRANA – slideshow plakátů -->
+  <main class="right">
+    <div class="poster-wrap">
+      <img id="poster" src="" alt="Plakát události" referrerpolicy="no-referrer" />
+    </div>
+    <div class="poster-text">
+      <div id="poster-title"></div>
+      <div id="poster-description"></div>
+    </div>
+  </main>
 
-<script>
-const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4XvAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=xlsx";
-let events = [];
-let currentIndex = 0;
+  <!-- SheetJS (XLSX) -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
-async function loadEvents() {
-    const response = await fetch(sheetUrl);
-    const arrayBuffer = await response.arrayBuffer();
-    const workbook = XLSX.read(arrayBuffer, { type: "array" });
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
-    const json = XLSX.utils.sheet_to_json(sheet);
+  <script>
+    const XLSX_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4XvAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=xlsx";
 
-    events = json.map(row => ({
-        start_date: row.start_date,
-        start_time: row.start_time,
-        end_date: row.end_date,
-        title: row.title,
-        description: row.description,
-        poster_url: row.poster_url,
-        place: row.place
-    }));
+    let allEvents = [];
+    let slideEvents = [];
+    let slideIndex = 0;
+    let slideTimer = null;
 
-    currentIndex = 0;
-    showEvent();
-}
+    /* ---------- Helpers: Excel datum/čas ---------- */
+    function excelSerialToDate(serial) {
+      // funguje i s frakcí (časem)
+      const utcDays = serial - 25569;
+      const utcMs = utcDays * 86400 * 1000;
+      return new Date(utcMs);
+    }
+    function formatDateDDMMYYYY(val) {
+      let d;
+      if (typeof val === "number") {
+        d = excelSerialToDate(val);
+      } else {
+        d = new Date(val);
+      }
+      if (isNaN(d)) return String(val || "");
+      const dd = String(d.getUTCDate()).padStart(2, "0");
+      const mm = String(d.getUTCMonth() + 1).padStart(2, "0");
+      const yyyy = d.getUTCFullYear();
+      return `${dd}.${mm}.${yyyy}`;
+    }
+    function formatTimeHHMM(val) {
+      if (typeof val === "number") {
+        const totalSeconds = Math.round(val * 24 * 60 * 60);
+        const h = String(Math.floor(totalSeconds / 3600)).padStart(2, "0");
+        const m = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, "0");
+        return `${h}:${m}`;
+      }
+      if (typeof val === "string") {
+        const m = val.match(/^(\d{1,2}):(\d{2})/);
+        if (m) return `${m[1].padStart(2, "0")}:${m[2]}`;
+      }
+      return "";
+    }
+    function buildSortKey(start_date, start_time) {
+      let base = (typeof start_date === "number") ? excelSerialToDate(start_date) : new Date(start_date);
+      if (isNaN(base)) return 0;
+      let date = new Date(base.getUTCFullYear(), base.getUTCMonth(), base.getUTCDate(), 0, 0, 0, 0); // lokální půlnoc
+      if (typeof start_time === "number") {
+        const secs = Math.round(start_time * 24 * 60 * 60);
+        date.setSeconds(date.getSeconds() + secs);
+      } else if (typeof start_time === "string") {
+        const m = start_time.match(/^(\d{1,2}):(\d{2})/);
+        if (m) {
+          date.setHours(parseInt(m[1], 10), parseInt(m[2], 10), 0, 0);
+        }
+      }
+      return date.getTime();
+    }
 
-function showEvent() {
-    if (events.length === 0) return;
-    const event = events[currentIndex];
-    document.getElementById("poster").src = event.poster_url;
-    document.getElementById("event-title").textContent = event.title;
-    document.getElementById("event-place").textContent = event.place;
+    /* ---------- Načtení XLSX ---------- */
+    async function loadEvents() {
+      try {
+        const res = await fetch(XLSX_URL, { cache: "no-store" });
+        const buf = await res.arrayBuffer();
+        const wb = XLSX.read(buf, { type: "array" });
+        const sheet = wb.Sheets[wb.SheetNames[0]];
+        const rows = XLSX.utils.sheet_to_json(sheet, { raw: true }); // zachovej čísla (Excel serial)
 
-    currentIndex = (currentIndex + 1) % events.length;
-}
+        allEvents = rows
+          .map(r => ({
+            start_date: r.start_date,
+            start_time: r.start_time,
+            end_date: r.end_date,
+            title: r.title || "",
+            description: r.description || "",
+            poster_url: r.poster_url || "",
+            place: r.place || "",
+            sortKey: buildSortKey(r.start_date, r.start_time)
+          }))
+          .filter(e => e.title || e.poster_url || e.place) // odfiltruj prázdné řádky
+          .sort((a, b) => a.sortKey - b.sortKey);
 
-// načtení knihovny XLSX
-const script = document.createElement("script");
-script.src = "https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js";
-script.onload = () => {
+        slideEvents = allEvents.filter(e => e.poster_url); // pro slideshow ber jen akce s plakátem
+
+        renderCalendar(allEvents);
+        resetSlideshow();
+      } catch (err) {
+        console.error("Chyba načítání XLSX:", err);
+      }
+    }
+
+    /* ---------- Vykreslení kalendáře vlevo ---------- */
+    function renderCalendar(events) {
+      const wrap = document.getElementById("events");
+      wrap.innerHTML = "";
+      events.forEach(e => {
+        const dateStr = formatDateDDMMYYYY(e.start_date);
+        const timeStr = formatTimeHHMM(e.start_time);
+        const el = document.createElement("div");
+        el.className = "event";
+        el.innerHTML = `
+          <div class="event-datetime">${dateStr}${timeStr ? " " + timeStr : ""}</div>
+          <div class="event-title">${escapeHtml(e.title)}</div>
+          <div class="event-place">${escapeHtml(e.place)}</div>
+        `;
+        wrap.appendChild(el);
+      });
+    }
+
+    /* ---------- Slideshow plakátů vpravo ---------- */
+    function resetSlideshow() {
+      slideIndex = 0;
+      if (slideTimer) {
+        clearInterval(slideTimer);
+      }
+      showSlide(); // zobraz první
+      slideTimer = setInterval(showSlide, 8000); // každých 8 s
+    }
+
+    function showSlide() {
+      const posterEl = document.getElementById("poster");
+      const titleEl = document.getElementById("poster-title");
+      const descEl  = document.getElementById("poster-description");
+
+      if (!slideEvents.length) {
+        posterEl.src = "";
+        titleEl.textContent = "";
+        descEl.textContent  = "";
+        return;
+      }
+
+      const ev = slideEvents[slideIndex];
+
+      // fade
+      posterEl.classList.remove("fade-in");
+      posterEl.classList.add("fade-out");
+
+      setTimeout(() => {
+        posterEl.src = ev.poster_url || "";
+        posterEl.alt = ev.title ? `Plakát: ${ev.title}` : "Plakát události";
+        titleEl.textContent = ev.title || "";
+        descEl.textContent  = ev.description || "";
+
+        posterEl.classList.remove("fade-out");
+        posterEl.classList.add("fade-in");
+      }, 500);
+
+      slideIndex = (slideIndex + 1) % slideEvents.length;
+    }
+
+    /* ---------- Utility ---------- */
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, s => ({
+        "&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"
+      }[s]));
+    }
+
+    /* ---------- Start + hodinová aktualizace ---------- */
     loadEvents();
-    setInterval(showEvent, 5000); // měnit plakát každých 5 sekund
-    setInterval(loadEvents, 3600000); // aktualizace dat každou hodinu
-};
-document.head.appendChild(script);
-</script>
-
+    setInterval(loadEvents, 3600000); // každou hodinu nová data
+  </script>
 </body>
 </html>
