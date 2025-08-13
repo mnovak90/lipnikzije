@@ -74,18 +74,25 @@
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script>
-const xlsxUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4vAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=xlsx";
+const xlsxUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4XvAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=xlsx";
 
-// Načtení XLSX souboru
-async function loadXLSX(url) {
-  const response = await fetch(url);
-  const arrayBuffer = await response.arrayBuffer();
-  const data = new Uint8Array(arrayBuffer);
-  const workbook = XLSX.read(data, { type: "array" });
-  const firstSheet = workbook.SheetNames[0];
-  const sheet = workbook.Sheets[firstSheet];
-  const json = XLSX.utils.sheet_to_json(sheet);
-  return json;
+let eventsData = [];
+
+// Funkce pro načtení XLSX
+async function loadXLSX() {
+  try {
+    const response = await fetch(xlsxUrl);
+    const arrayBuffer = await response.arrayBuffer();
+    const data = new Uint8Array(arrayBuffer);
+    const workbook = XLSX.read(data, { type: "array" });
+    const firstSheet = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[firstSheet];
+    const json = XLSX.utils.sheet_to_json(sheet);
+    eventsData = json;
+    renderCalendar(eventsData);
+  } catch(e) {
+    console.error("Chyba při načítání XLSX:", e);
+  }
 }
 
 // Vykreslení kalendáře
@@ -100,15 +107,16 @@ function renderCalendar(events) {
   });
 }
 
-// Spuštění slideshow
-function startSlideshow(events) {
-  let index = 0;
+// Slideshow
+let slideshowIndex = 0;
+function startSlideshow() {
   const poster = document.getElementById('poster');
   const title = document.getElementById('poster-title');
   const description = document.getElementById('poster-description');
 
   function showNext() {
-    const event = events[index];
+    if(eventsData.length === 0) return;
+    const event = eventsData[slideshowIndex];
     poster.classList.remove('fade-in');
     poster.classList.add('fade-out');
 
@@ -120,19 +128,21 @@ function startSlideshow(events) {
       poster.classList.add('fade-in');
     }, 1000);
 
-    index = (index + 1) % events.length;
+    slideshowIndex = (slideshowIndex + 1) % eventsData.length;
   }
 
   showNext();
-  setInterval(showNext, 8000);
+  setInterval(showNext, 8000); // každých 8 sekund nový plakát
 }
 
-// Hlavní
-(async function() {
-  const events = await loadXLSX(xlsxUrl);
-  renderCalendar(events);
-  startSlideshow(events);
-})();
+// Načtení dat a spuštění slideshow
+loadXLSX().then(() => startSlideshow());
+
+// Automatická aktualizace každou hodinu
+setInterval(() => {
+  loadXLSX();
+}, 3600000); // 3600000 ms = 1 hodina
+
 </script>
 
 </body>
