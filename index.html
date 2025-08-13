@@ -54,33 +54,32 @@
         <h2>Kalendář akcí</h2>
         <div id="events">Načítám události...</div>
     </div>
-    <div id="poster">
-        <!-- Plakáty se vloží sem -->
-    </div>
+    <div id="poster"></div>
 
+<!-- PapaParse knihovna pro korektní načtení CSV -->
+<script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4XvAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=csv";
 let posters = [];
 let currentPosterIndex = 0;
 
 async function fetchCSV() {
+    document.getElementById("events").innerHTML = "Načítám události...";
     try {
         const res = await fetch(CSV_URL);
-        const text = await res.text();
-        const rows = text.split("\n").map(r => r.split(","));
+        const csvData = await res.text();
 
-        // Vyčistit hlavičku
-        const headers = rows[0];
-        const data = rows.slice(1).filter(r => r.length >= 3);
+        const parsed = Papa.parse(csvData, { header: true, skipEmptyLines: true });
+        const data = parsed.data;
 
         let eventsHTML = "";
         posters = [];
 
         data.forEach(row => {
-            let date = row[0].trim();
-            let name = row[1].trim();
-            let description = row[2].trim();
-            let imageUrl = row[3] ? row[3].trim() : "";
+            let date = row["date"] || row["Datum"] || "";
+            let name = row["name"] || row["Název"] || "";
+            let description = row["description"] || row["Popis"] || "";
+            let imageUrl = row["image"] || row["Obrázek"] || "";
 
             eventsHTML += `<div class="event"><strong>${date} – ${name}</strong><br>${description}</div>`;
 
