@@ -1,186 +1,133 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="cs">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
-<title>LIPNÍK ŽIJE! — displej</title>
+<meta charset="UTF-8">
+<title>LIPNÍK ŽIJE!</title>
 <style>
-  :root{
-    --bg:#0b0b0c;
-    --card:#0f1114;
-    --accent:#f5c24a;
-    --text:#f4f4f6;
-  }
-  html,body{height:100%;margin:0;background:var(--bg);color:var(--text);font-family:Inter,system-ui,Segoe UI,Arial;}
-  .wrap{display:flex;height:100vh;gap:20px;padding:20px;box-sizing:border-box;}
-  .left{flex:1;background:linear-gradient(180deg, rgba(255,255,255,0.02), transparent);border-radius:12px;padding:18px;overflow:auto;}
-  .right{width:55%;max-width:900px;background:var(--card);border-radius:12px;padding:10px;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;flex-direction:column;}
-  h1{margin:0 0 8px 0;font-size:34px;letter-spacing:0.4px;}
-  .sub{color:#cfcfcf;margin-bottom:12px;}
-  .days{display:flex;flex-direction:column;gap:8px;}
-  .day{background:rgba(255,255,255,0.02);padding:10px;border-radius:8px;}
-  .date{font-weight:700;font-size:16px;color:var(--accent);}
-  .events{font-size:14px;color:#ddd;margin-top:4px;}
-  .poster{position:absolute;top:0;left:0;right:0;bottom:60px;display:flex;align-items:center;justify-content:center;transition:opacity 0.8s ease,transform 0.8s ease;opacity:0;transform:scale(1.03);}
-  .poster.visible{opacity:1;transform:scale(1);}
-  .poster img{max-width:100%;max-height:100%;object-fit:contain;border-radius:6px;box-shadow:0 20px 40px rgba(0,0,0,0.6);}
-  .desc-box{position:absolute;bottom:0;left:0;right:0;padding:8px 12px;background:rgba(0,0,0,0.6);color:#fff;font-size:15px;text-align:center;}
-  .footer{position:absolute;left:12px;bottom:12px;color:#9a9a9a;font-size:13px;}
-  @media(min-width:1400px){
-    h1{font-size:44px;}
-    .date{font-size:20px;}
-  }
+    body {
+        font-family: Arial, sans-serif;
+        display: flex;
+        margin: 0;
+        height: 100vh;
+        background-color: #111;
+        color: white;
+    }
+    #calendar {
+        flex: 1;
+        padding: 20px;
+        overflow-y: auto;
+        background-color: #222;
+    }
+    #posters {
+        flex: 1;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background-color: #000;
+        position: relative;
+    }
+    .event {
+        margin-bottom: 15px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #444;
+    }
+    .event-date {
+        font-weight: bold;
+        color: #ffcc00;
+    }
+    .event-title {
+        font-size: 18px;
+        margin: 5px 0;
+    }
+    .event-description {
+        font-size: 14px;
+        color: #ccc;
+    }
+    #posterImage {
+        max-width: 90%;
+        max-height: 90%;
+        border-radius: 8px;
+        box-shadow: 0 0 15px rgba(255,255,255,0.3);
+        opacity: 1;
+        transition: opacity 1s ease-in-out;
+        position: absolute;
+    }
+    .fade-out {
+        opacity: 0;
+    }
 </style>
 </head>
 <body>
-<div class="wrap">
-  <div class="left" id="leftPane">
-    <h1>LIPNÍK ŽIJE!</h1>
-    <div class="sub" id="periodInfo">Načítám události...</div>
-    <div class="days" id="daysList"></div>
-  </div>
 
-  <div class="right" id="rightPane">
-    <div class="footer">Automaticky: Google Sheet → displej</div>
-  </div>
+<div id="calendar">
+    <h2>Kalendář akcí</h2>
+    <div id="events">Načítám události...</div>
+</div>
+
+<div id="posters">
+    <img id="posterImage" src="" alt="Plakát">
 </div>
 
 <script>
-const CONFIG = {
-  SHEET_ID: "2PACX-1vQ2ppsqGwnoqU4XvAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ",
-  sheetName: "Sheet1",
-  daysAhead: 30,
-  refreshInterval: 1000*60*5,
-  carouselInterval: 8000
-};
-
-const gvizUrl = id => `https://docs.google.com/spreadsheets/d/e/${id}/gviz/tq?tqx=out:json&sheet=${encodeURIComponent(CONFIG.sheetName)}`;
+const sheetURL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4XvAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/gviz/tq?tqx=out:json";
 
 let posters = [];
-let currentPoster = -1;
-let carouselTimer = null;
+let currentPoster = 0;
 
-async function fetchSheet(){
-  const r = await fetch(gvizUrl(CONFIG.SHEET_ID));
-  const text = await r.text();
-  const m = text.match(/google\.visualization\.Query\.setResponse\(([\s\S]*)\);/);
-  if(!m) throw new Error("Nepodařilo se načíst data z tabulky.");
-  const data = JSON.parse(m[1]);
-  const cols = data.table.cols.map(c => (c.label||"").toLowerCase());
-  return data.table.rows.map(row => {
-    const out = {};
-    row.c.forEach((cell,i) => out[cols[i] || ('c'+i)] = cell ? cell.v : "");
-    return out;
-  });
+function fetchEvents() {
+    fetch(sheetURL)
+        .then(res => res.text())
+        .then(data => {
+            const json = JSON.parse(data.substr(47).slice(0, -2));
+            const rows = json.table.rows;
+            let html = "";
+            posters = [];
+
+            rows.forEach(row => {
+                let date = row.c[0] ? row.c[0].f : "";
+                let title = row.c[1] ? row.c[1].v : "";
+                let description = row.c[2] ? row.c[2].v : "";
+                let posterURL = row.c[3] ? row.c[3].v : "";
+
+                html += `
+                    <div class="event">
+                        <div class="event-date">${date}</div>
+                        <div class="event-title">${title}</div>
+                        <div class="event-description">${description}</div>
+                    </div>
+                `;
+
+                if (posterURL) posters.push(posterURL);
+            });
+
+            document.getElementById("events").innerHTML = html || "Žádné akce";
+            if (posters.length > 0) {
+                currentPoster = 0;
+                document.getElementById("posterImage").src = posters[0];
+            }
+        })
+        .catch(err => {
+            document.getElementById("events").innerHTML = "Chyba při načítání dat";
+            console.error(err);
+        });
 }
 
-function parseDateTime(dateStr,timeStr){
-  if (!dateStr) return null;
-  let s = dateStr;
-  if (timeStr) s += ' ' + timeStr;
-  const d = new Date(s);
-  return isNaN(d) ? null : d;
-}
-
-function renderDays(events){
-  const container = document.getElementById('daysList');
-  container.innerHTML = '';
-  const periodInfo = document.getElementById('periodInfo');
-  const startDate = new Date();
-  const endDate = new Date();
-  endDate.setDate(endDate.getDate()+CONFIG.daysAhead-1);
-  periodInfo.textContent = `Přehled: ${startDate.toLocaleDateString('cs-CZ')} — ${endDate.toLocaleDateString('cs-CZ')}`;
-
-  const grouped = {};
-  events.forEach(e=>{
-    const key = e.start_date.toISOString().slice(0,10);
-    if (!grouped[key]) grouped[key] = [];
-    grouped[key].push(e);
-  });
-
-  Object.keys(grouped).sort().forEach(key=>{
-    const dayEvents = grouped[key];
-    const dEl = document.createElement('div');
-    dEl.className = 'day';
-    const dateEl = document.createElement('div');
-    dateEl.className = 'date';
-    dateEl.textContent = key;
-    const evEl = document.createElement('div');
-    evEl.className = 'events';
-    evEl.innerHTML = dayEvents.map(e=>
-      `<strong>${e.start_time}</strong> ${escapeHtml(e.title)} <span style="color:#aaa">• ${escapeHtml(e.place||'')}</span>`
-    ).join('<br>');
-    dEl.appendChild(dateEl);
-    dEl.appendChild(evEl);
-    container.appendChild(dEl);
-  });
-}
-
-function escapeHtml(s){
-  return (s||'').toString().replace(/[&<>"']/g, c=>({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'})[c]);
-}
-
-function setupCarousel(items){
-  posters = items;
-  const right = document.getElementById('rightPane');
-  right.querySelectorAll('.poster').forEach(n=>n.remove());
-
-  items.forEach((it,idx)=>{
-    const p = document.createElement('div');
-    p.className = 'poster';
-    if (idx===0) p.classList.add('visible');
-    const img = document.createElement('img');
-    img.src = it.url;
-    p.appendChild(img);
-    if (it.description) {
-      const desc = document.createElement('div');
-      desc.className = 'desc-box';
-      desc.textContent = it.description;
-      p.appendChild(desc);
+function rotatePosters() {
+    if (posters.length > 0) {
+        const img = document.getElementById("posterImage");
+        img.classList.add("fade-out");
+        setTimeout(() => {
+            currentPoster = (currentPoster + 1) % posters.length;
+            img.src = posters[currentPoster];
+            img.classList.remove("fade-out");
+        }, 1000); // čas fade-out odpovídá CSS transition
     }
-    right.appendChild(p);
-  });
-
-  currentPoster = 0;
-  if (carouselTimer) clearInterval(carouselTimer);
-  if (posters.length>1){
-    carouselTimer = setInterval(()=> {
-      const items = document.querySelectorAll('.poster');
-      items[currentPoster]?.classList.remove('visible');
-      currentPoster = (currentPoster+1) % items.length;
-      items[currentPoster]?.classList.add('visible');
-    }, CONFIG.carouselInterval);
-  }
 }
 
-async function refreshAll(){
-  const rows = await fetchSheet();
-  const now = new Date();
-  const endDate = new Date(); endDate.setDate(endDate.getDate()+CONFIG.daysAhead);
-  const events = rows.map(r=>{
-    const start = parseDateTime(r.start_date, r.start_time);
-    const end = parseDateTime(r.end_date);
-    return {
-      start_date: start,
-      end_date: end,
-      start_time: r.start_time || '',
-      title: r.title || '',
-      description: r.description || '',
-      poster_url: r.poster_url || '',
-      place: r.place || '',
-      public: (r.public||'ano').toString().toLowerCase()
-    };
-  }).filter(e=>e.start_date && e.end_date && e.end_date >= now && e.start_date <= endDate)
-    .filter(e=> e.public==='ano' || e.public==='yes' || e.public==='true');
-
-  renderDays(events);
-
-  const posterItems = events.filter(e=>e.poster_url).map(e=>({url:e.poster_url, description:e.description}));
-  setupCarousel(posterItems);
-}
-
-refreshAll();
-setInterval(refreshAll, CONFIG.refreshInterval);
+fetchEvents();
+setInterval(rotatePosters, 5000);     // rotace plakátů
+setInterval(fetchEvents, 600000);     // obnovení dat každých 10 minut
 </script>
+
 </body>
 </html>
