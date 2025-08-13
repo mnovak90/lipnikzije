@@ -1,474 +1,202 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta charset="UTF-8">
 <title>LIPNÍK ŽIJE</title>
 <style>
-  :root{
-    --left-bg: #272726;
-    --date-green: #12a537;
-    --poster-text: #272726;
-  }
-  *{box-sizing:border-box}
   body {
     margin: 0;
-    font-family: Arial, Helvetica, sans-serif;
+    font-family: Arial, sans-serif;
     display: flex;
     height: 100vh;
     overflow: hidden;
   }
-
-  /* levá strana (širší) */
   #calendar {
-    width: 55%;
-    background: var(--left-bg);
-    color: #fff;
+    width: 35%;
+    background: #272726;
     padding: 20px;
     box-sizing: border-box;
-    overflow: hidden; /* scroll bude JSem */
-    display: flex;
-    flex-direction: column;
-    gap: 10px;
+    overflow-y: auto;
+    color: white;
   }
-  #logo {
-    display:block;
-    margin: 0 auto 6px auto;
-    max-width: 200px; /* vráceno na menší velikost */
+  #calendar-header {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  #calendar-header img {
+    max-width: 80%;
     height: auto;
   }
-  #subtitle {
-    text-align:center;
-    color: #d8d8d8;
-    font-size: 14px;
-    margin-bottom: 6px;
+  #calendar-subtitle {
+    text-align: center;
+    font-size: 0.9em;
+    margin-bottom: 20px;
+    color: white;
   }
-
-  /* kontejner, který se bude scrollovat automaticky */
-  #events-wrap {
-    overflow: hidden;
-    flex: 1 1 auto;
-    position: relative;
-  }
-  #events {
-    padding-right: 6px;
-    overflow: hidden; /* viz. vlastní automatické scrollování */
-  }
-
   .event {
-    padding: 12px 6px;
-    border-bottom: 1px solid rgba(255,255,255,0.06);
+    margin-bottom: 15px;
+    border-bottom: 1px solid #555;
+    padding-bottom: 10px;
   }
-  .event-row { margin-bottom:6px; display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
-  .event-date { color: var(--date-green); font-weight:700; font-size:15px; }
-  .event-time { color: #fff; font-weight:700; font-size:14px; }
-
-  .event-title { font-size:16px; font-weight:700; margin-bottom:6px; color:#fff; }
-  .event-place { font-size:14px; color: #e6e6e6; margin-bottom:6px; }
-
-  /* description jako jeden řádek s posuvem (pomalejší) */
-  .event-description {
+  .event strong.date {
+    color: #12a537;
+  }
+  .event strong.time {
+    color: white;
+  }
+  .marquee {
     overflow: hidden;
     white-space: nowrap;
-    display:block;
-    width:100%;
     box-sizing: border-box;
-    /* délku animace můžeš měnit - větší číslo = pomaleji */
-    animation: marquee 24s linear infinite;
-    color: #ddd;
-    font-size: 13px;
+    animation: marquee 20s linear infinite; /* zpomaleno */
   }
   @keyframes marquee {
-    0%   { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
+    0% { text-indent: 100%; }
+    100% { text-indent: -100%; }
   }
-
-  /* pravá strana */
   #slideshow-container {
-    width: 45%;
-    background: url("https://mnovak90.github.io/lipnikzije/bg.jpg") center/cover no-repeat;
+    width: 65%;
+    position: relative;
+    background: url("https://mnovak90.github.io/lipnikzije/bg.jpg") no-repeat center center;
+    background-size: cover;
+    color: #272726;
     display: flex;
     flex-direction: column;
-    align-items: center;
     justify-content: center;
-    padding: 24px;
-    box-sizing: border-box;
-    color: var(--poster-text);
-  }
-
-  /* poster wrapper s pevým poměrem 4:5 */
-  .poster-wrapper {
-    width: 80%;
-    max-width: 720px;
-    aspect-ratio: 4 / 5; /* nutí box o poměru 4:5 */
-    display: grid;
-    place-items: center;
-    background: rgba(255,255,255,0.0);
-    position: relative;
+    align-items: center;
   }
   #poster {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-    transition: opacity 0.8s ease;
-    border-radius: 6px;
-    box-shadow: 0 8px 30px rgba(0,0,0,0.45);
+    max-width: 80%;
+    max-height: 60%;
+    margin-bottom: 15px;
+    transition: opacity 1s;
   }
   #poster.fade-out { opacity: 0; }
-  #poster.fade-in  { opacity: 1; }
-
-  /* prostor pro text informací (max 4 řádky) */
-  .poster-info {
-    width: 80%;
-    max-width: 720px;
-    margin-top: 14px;
-    background: rgba(255,255,255,0.88);
-    color: var(--poster-text);
-    padding: 12px 14px;
-    border-radius: 8px;
+  #poster.fade-in { opacity: 1; }
+  #poster-title {
+    font-size: 2em;
+    margin-bottom: 10px;
     text-align: center;
-    min-height: 3.6em; /* zajišťuje nějakou výšku */
-    display: flex;
-    flex-direction: column;
-    gap: 6px;
-    justify-content: center;
-    overflow: hidden;
+    color: #272726;
   }
-
-  .poster-title {
-    font-weight:800;
-    line-height:1.05;
-    margin:0;
-    word-break:break-word;
+  #poster-description {
+    font-size: 1.2em;
+    text-align: center;
+    max-width: 80%;
+    color: #272726;
   }
-  .poster-desc {
-    margin:0;
-    line-height:1.15;
-    color: #444;
-    word-break:break-word;
-  }
-
-  /* drobné úpravy scrollbar (neviditelný) */
-  #events::-webkit-scrollbar { width: 8px; }
-  #events::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.08); border-radius:8px; }
 </style>
 </head>
 <body>
 
-  <aside id="calendar">
-    <img id="logo" src="https://mnovak90.github.io/lipnikzije/lipnikzije-bile.png" alt="LIPNÍK ŽIJE logo">
-    <div id="subtitle">SOUHRN KULTURNÍCH AKCÍ V LIPNÍKU</div>
+<div id="calendar">
+  <div id="calendar-header">
+    <img src="https://mnovak90.github.io/lipnikzije/lipnikzije-bile.png" alt="LIPNÍK ŽIJE">
+  </div>
+  <div id="calendar-subtitle">SOUHRN KULTURNÍCH AKCÍ V LIPNÍKU</div>
+  <div id="events"></div>
+</div>
 
-    <div id="events-wrap">
-      <div id="events" aria-live="polite"></div>
-    </div>
-  </aside>
+<div id="slideshow-container">
+  <img id="poster" src="" alt="Plakát">
+  <div id="poster-title"></div>
+  <div id="poster-description"></div>
+</div>
 
-  <main id="slideshow-container">
-    <div class="poster-wrapper">
-      <img id="poster" src="" alt="Plakát akce" />
-    </div>
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-    <div class="poster-info" id="poster-info">
-      <div class="poster-title" id="poster-title"></div>
-      <div class="poster-desc" id="poster-desc"></div>
-    </div>
-  </main>
+<script>
+const xlsxUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4XvAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=xlsx";
+let eventsData = [];
 
-  <!-- SheetJS -->
-  <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+function excelDateToJSDate(serial) {
+  const utc_days = Math.floor(serial - 25569);
+  const utc_value = utc_days * 86400;                                        
+  const date_info = new Date(utc_value * 1000);
+  const year = date_info.getUTCFullYear();
+  const month = String(date_info.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date_info.getUTCDate()).padStart(2, '0');
+  return `${day}.${month}.${year}`;
+}
 
-  <script>
-  const xlsxUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4vAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=xlsx";
+function excelTimeToString(timeSerial) {
+  const totalSeconds = Math.round(timeSerial * 24 * 60 * 60);
+  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
 
-  let eventsData = [];      // raw
-  let sortedEvents = [];    // sorted by start datetime
-  let slideEvents = [];     // events with poster_url
-  let slideIndex = 0;
-  let slideshowInterval = null;
-  let autoScrollInterval = null;
+async function loadXLSX() {
+  try {
+    const response = await fetch(xlsxUrl);
+    const arrayBuffer = await response.arrayBuffer();
+    const data = new Uint8Array(arrayBuffer);
+    const workbook = XLSX.read(data, { type: "array" });
+    const firstSheet = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[firstSheet];
+    const json = XLSX.utils.sheet_to_json(sheet);
+    eventsData = json;
+    renderCalendar(eventsData);
+  } catch(e) {
+    console.error("Chyba při načítání XLSX:", e);
+  }
+}
 
-  /* ---------- Helpers pro Excel datum/čas ---------- */
-  function excelSerialToJSDate(serial) {
-    // Excel serial to JS Date in UTC
-    // handle numbers and strings that contain numbers
-    const s = Number(serial);
-    if (isNaN(s)) return null;
-    const utc_days = s - 25569;
-    const utc_ms = Math.floor(utc_days * 86400 * 1000);
-    return new Date(utc_ms);
+function renderCalendar(events) {
+  const container = document.getElementById('events');
+  container.innerHTML = '';
+  events.forEach(event => {
+    let date = event.start_date;
+    let time = event.start_time;
+
+    if (!isNaN(date)) date = excelDateToJSDate(Number(date));
+    if (!isNaN(time)) time = excelTimeToString(Number(time));
+
+    const div = document.createElement('div');
+    div.className = 'event';
+    div.innerHTML = `
+      <strong class="date">${date}</strong> 
+      <strong class="time">${time}</strong><br>
+      ${event.title}<br>
+      ${event.place}<br>
+      <div class="marquee">${event.description || ''}</div>
+    `;
+    container.appendChild(div);
+  });
+}
+
+let slideshowIndex = 0;
+function startSlideshow() {
+  const poster = document.getElementById('poster');
+  const title = document.getElementById('poster-title');
+  const description = document.getElementById('poster-description');
+
+  function showNext() {
+    if(eventsData.length === 0) return;
+    const event = eventsData[slideshowIndex];
+    poster.classList.remove('fade-in');
+    poster.classList.add('fade-out');
+
+    setTimeout(() => {
+      poster.src = event.poster_url || '';
+      title.textContent = event.title || '';
+      description.textContent = event.description || '';
+      poster.classList.remove('fade-out');
+      poster.classList.add('fade-in');
+    }, 1000);
+
+    slideshowIndex = (slideshowIndex + 1) % eventsData.length;
   }
 
-  function parseDateValue(val) {
-    if (val === null || val === undefined || val === "") return null;
-    if (typeof val === "number") return excelSerialToJSDate(val);
-    // try parse ISO / date-string
-    const d = new Date(val);
-    if (!isNaN(d)) return d;
-    // fallback: try parse dd.mm.yyyy or dd/mm/yyyy
-    const m = String(val).match(/(\d{1,2})[.\-\/ ]+(\d{1,2})[.\-\/ ]+(\d{2,4})/);
-    if (m) {
-      const dd = Number(m[1]), mm = Number(m[2]), yy = Number(m[3]);
-      const year = yy < 100 ? 2000 + yy : yy;
-      return new Date(year, mm - 1, dd);
-    }
-    return null;
-  }
+  showNext();
+  setInterval(showNext, 8000);
+}
 
-  function parseTimeValue(val) {
-    if (val === null || val === undefined || val === "") return null;
-    if (typeof val === "number") {
-      // Excel fractional day
-      const secs = Math.round(val * 24 * 60 * 60);
-      const h = Math.floor(secs / 3600);
-      const m = Math.floor((secs % 3600) / 60);
-      return { h, m };
-    }
-    const s = String(val).trim();
-    const m = s.match(/(\d{1,2}):(\d{2})/);
-    if (m) return { h: Number(m[1]), m: Number(m[2]) };
-    return null;
-  }
-
-  function dateToDDMMYYYY(d) {
-    if (!d) return "";
-    const dd = String(d.getDate()).padStart(2,"0");
-    const mm = String(d.getMonth()+1).padStart(2,"0");
-    const yyyy = d.getFullYear();
-    return `${dd}. ${mm}. ${yyyy}`;
-  }
-  function dayAndMonth(d) {
-    if (!d) return "";
-    const dd = String(d.getDate()).padStart(2,"0");
-    const mm = String(d.getMonth()+1).padStart(2,"0");
-    return `${dd}. ${mm}.`;
-  }
-
-  function formatDateRange(startVal, endVal) {
-    const sd = parseDateValue(startVal);
-    const ed = parseDateValue(endVal);
-    if (!sd) return "";
-    if (!ed || sd.getTime() === ed.getTime()) {
-      return dateToDDMMYYYY(sd);
-    }
-    // show "DD. MM. - DD. MM. YYYY"
-    const sPart = dayAndMonth(sd);
-    const eDay = String(ed.getDate()).padStart(2,"0");
-    const eMonth = String(ed.getMonth()+1).padStart(2,"0");
-    const eYear = ed.getFullYear();
-    return `${sPart} - ${eDay}. ${eMonth}. ${eYear}`;
-  }
-
-  /* ---------- Build Date sorting key ---------- */
-  function buildStartDateTime(event) {
-    // combine start_date and start_time to a JS Date (local)
-    const sd = parseDateValue(event.start_date);
-    if (!sd) return null;
-    const t = parseTimeValue(event.start_time);
-    const dt = new Date(sd.getFullYear(), sd.getMonth(), sd.getDate(), 0, 0, 0, 0);
-    if (t) dt.setHours(t.h, t.m || 0, 0, 0);
-    return dt;
-  }
-
-  /* ---------- Load XLSX ---------- */
-  async function loadXLSX() {
-    try {
-      const res = await fetch(xlsxUrl, { cache: "no-store" });
-      const buf = await res.arrayBuffer();
-      const wb = XLSX.read(buf, { type: "array" });
-      const sheet = wb.Sheets[wb.SheetNames[0]];
-      const rows = XLSX.utils.sheet_to_json(sheet, { raw: true });
-
-      eventsData = rows.map(r => ({
-        start_date: r.start_date,
-        start_time: r.start_time,
-        end_date: r.end_date,
-        title: r.title || "",
-        description: r.description || "",
-        poster_url: r.poster_url || "",
-        place: r.place || ""
-      }));
-
-      // remove empty rows (no title and no poster and no place)
-      eventsData = eventsData.filter(e => e.title || e.poster_url || e.place);
-
-      // sort by start datetime
-      sortedEvents = eventsData.slice().sort((a,b) => {
-        const da = buildStartDateTime(a);
-        const db = buildStartDateTime(b);
-        if (!da && !db) return 0;
-        if (!da) return 1;
-        if (!db) return -1;
-        return da - db;
-      });
-
-      // slide events only those with poster_url
-      slideEvents = sortedEvents.filter(e => e.poster_url);
-
-      renderCalendar(sortedEvents);
-      resetAutoScroll();
-      resetSlideshow();
-
-    } catch (err) {
-      console.error("Chyba načítání XLSX:", err);
-    }
-  }
-
-  /* ---------- Render calendar (left) ---------- */
-  function renderCalendar(events) {
-    const container = document.getElementById("events");
-    container.innerHTML = "";
-    events.forEach(ev => {
-      const dateStr = formatDateRange(ev.start_date, ev.end_date) || "";
-      // time
-      let timeStr = "";
-      const t = parseTimeValue(ev.start_time);
-      if (t) {
-        timeStr = String(t.h).padStart(2,"0") + ":" + String(t.m).padStart(2,"0");
-      }
-
-      const div = document.createElement("div");
-      div.className = "event";
-
-      // build inner HTML but only include fields that exist
-      let inner = "";
-      if (dateStr || timeStr) {
-        inner += `<div class="event-row">` +
-                 (dateStr ? `<div class="event-date">${escapeHtml(dateStr)}</div>` : "") +
-                 (timeStr ? `<div class="event-time">${escapeHtml(timeStr)}</div>` : "") +
-                 `</div>`;
-      }
-      if (ev.title) inner += `<div class="event-title">${escapeHtml(ev.title)}</div>`;
-      if (ev.place) inner += `<div class="event-place">${escapeHtml(ev.place)}</div>`;
-      if (ev.description) inner += `<div class="event-description">${escapeHtml(ev.description)}</div>`;
-
-      div.innerHTML = inner;
-      container.appendChild(div);
-    });
-  }
-
-  /* ---------- Auto-scroll left panel when content overflows ---------- */
-  function resetAutoScroll() {
-    const wrap = document.getElementById("events-wrap");
-    const content = document.getElementById("events");
-    // clear previous
-    if (autoScrollInterval) {
-      clearInterval(autoScrollInterval);
-      autoScrollInterval = null;
-    }
-    // if content fits, ensure top
-    content.scrollTop = 0;
-    setTimeout(()=>{ // wait for render
-      const maxScroll = content.scrollHeight - content.clientHeight;
-      if (maxScroll <= 0) return;
-      // scroll slowly: increment 1px every 70ms (adjust for speed)
-      const step = 1;
-      const delay = 70;
-      autoScrollInterval = setInterval(() => {
-        if (content.scrollTop >= maxScroll) {
-          // reached end: pause 3s then jump to top (smooth)
-          clearInterval(autoScrollInterval);
-          autoScrollInterval = null;
-          setTimeout(() => {
-            content.scrollTo({ top: 0, behavior: "smooth" });
-            // restart after brief pause to let smooth finish
-            setTimeout(resetAutoScroll, 2000);
-          }, 3000);
-        } else {
-          content.scrollTop = Math.min(content.scrollTop + step, maxScroll);
-        }
-      }, delay);
-    }, 150);
-  }
-
-  /* ---------- Slideshow on right (poster + info) ---------- */
-  function resetSlideshow() {
-    slideIndex = 0;
-    if (slideshowInterval) clearInterval(slideshowInterval);
-    showSlide();
-    slideshowInterval = setInterval(showSlide, 8000);
-  }
-
-  function showSlide() {
-    const posterEl = document.getElementById("poster");
-    const titleEl = document.getElementById("poster-title");
-    const descEl  = document.getElementById("poster-desc");
-
-    if (!slideEvents.length) {
-      posterEl.src = "";
-      titleEl.textContent = "";
-      descEl.textContent = "";
-      return;
-    }
-    const ev = slideEvents[slideIndex];
-
-    // fade effect
-    posterEl.classList.remove("fade-in");
-    posterEl.classList.add("fade-out");
-    setTimeout(()=>{
-      posterEl.src = ev.poster_url || "";
-      posterEl.alt = ev.title || "Plakát akce";
-      titleEl.textContent = ev.title || "";
-      descEl.textContent = ev.description || "";
-
-      // po vložení textu upravíme velikost písma tak, aby se vešlo max 4 řádky
-      fitTextToLines(titleEl, descEl, 4);
-
-      posterEl.classList.remove("fade-out");
-      posterEl.classList.add("fade-in");
-    }, 500);
-
-    slideIndex = (slideIndex + 1) % slideEvents.length;
-  }
-
-  /* ---------- Fit text (title+desc) do max počtu řádků tím, že zmenšíme font-size iterativně ---------- */
-  function fitTextToLines(titleEl, descEl, maxLines) {
-    // počáteční velikosti
-    titleEl.style.fontSize = ""; // reset -> CSS default
-    descEl.style.fontSize = "";  // reset
-    const container = document.getElementById("poster-info");
-    const maxHeight = (parseFloat(getComputedStyle(container).lineHeight) || 18) * maxLines;
-    // start from a reasonable max and reduce
-    let tSize = parseFloat(window.getComputedStyle(titleEl).fontSize) || 20;
-    let dSize = parseFloat(window.getComputedStyle(descEl).fontSize) || 14;
-    // if combined height > maxHeight reduce proportionally
-    function combinedHeight() {
-      // temporary inline-block measurement
-      titleEl.style.display = "block";
-      descEl.style.display = "block";
-      const h = titleEl.offsetHeight + descEl.offsetHeight;
-      return h;
-    }
-    // loop decreasing slightly until fits or reached min sizes
-    const minTitle = 12;
-    const minDesc = 10;
-    let iterations = 0;
-    while (combinedHeight() > container.clientHeight && iterations < 30) {
-      if (tSize > minTitle) { tSize = Math.max(minTitle, tSize - 1); titleEl.style.fontSize = tSize + "px"; }
-      if (combinedHeight() <= container.clientHeight) break;
-      if (dSize > minDesc) { dSize = Math.max(minDesc, dSize - 0.8); descEl.style.fontSize = dSize + "px"; }
-      iterations++;
-    }
-    // ensure we don't leave weird styles
-    titleEl.style.lineHeight = "1.05";
-    descEl.style.lineHeight = "1.15";
-  }
-
-  /* ---------- utility ---------- */
-  function escapeHtml(s) {
-    if (s === null || s === undefined) return "";
-    return String(s)
-      .replaceAll("&","&amp;")
-      .replaceAll("<","&lt;")
-      .replaceAll(">","&gt;")
-      .replaceAll('"',"&quot;")
-      .replaceAll("'", "&#39;");
-  }
-
-  /* ---------- Init + hourly refresh ---------- */
+loadXLSX().then(() => startSlideshow());
+setInterval(() => {
   loadXLSX();
-  // každou hodinu nové data (no-cache)
-  setInterval(loadXLSX, 3600000);
-  </script>
+}, 3600000);
+</script>
+
 </body>
 </html>
