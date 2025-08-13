@@ -43,12 +43,8 @@
     margin-bottom: 15px;
     transition: opacity 1s;
   }
-  #poster.fade-out {
-    opacity: 0;
-  }
-  #poster.fade-in {
-    opacity: 1;
-  }
+  #poster.fade-out { opacity: 0; }
+  #poster.fade-in { opacity: 1; }
   #poster-title {
     font-size: 2em;
     margin-bottom: 10px;
@@ -74,24 +70,25 @@
   <div id="poster-description"></div>
 </div>
 
-<script>
-const csvUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4vAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=csv";
+<!-- SheetJS knihovna -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
-async function loadCSV(url) {
+<script>
+const xlsxUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4vAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=xlsx";
+
+// Načtení XLSX souboru
+async function loadXLSX(url) {
   const response = await fetch(url);
-  const text = await response.text();
-  const lines = text.trim().split("\n");
-  const headers = lines.shift().split(",");
-  return lines.map(line => {
-    const values = line.split(",");
-    const obj = {};
-    headers.forEach((header, i) => {
-      obj[header] = values[i];
-    });
-    return obj;
-  });
+  const arrayBuffer = await response.arrayBuffer();
+  const data = new Uint8Array(arrayBuffer);
+  const workbook = XLSX.read(data, { type: "array" });
+  const firstSheet = workbook.SheetNames[0];
+  const sheet = workbook.Sheets[firstSheet];
+  const json = XLSX.utils.sheet_to_json(sheet);
+  return json;
 }
 
+// Vykreslení kalendáře
 function renderCalendar(events) {
   const container = document.getElementById('events');
   container.innerHTML = '';
@@ -103,6 +100,7 @@ function renderCalendar(events) {
   });
 }
 
+// Spuštění slideshow
 function startSlideshow(events) {
   let index = 0;
   const poster = document.getElementById('poster');
@@ -115,9 +113,9 @@ function startSlideshow(events) {
     poster.classList.add('fade-out');
 
     setTimeout(() => {
-      poster.src = event.poster_url;
-      title.textContent = event.title;
-      description.textContent = event.description;
+      poster.src = event.poster_url || '';
+      title.textContent = event.title || '';
+      description.textContent = event.description || '';
       poster.classList.remove('fade-out');
       poster.classList.add('fade-in');
     }, 1000);
@@ -129,8 +127,9 @@ function startSlideshow(events) {
   setInterval(showNext, 8000);
 }
 
+// Hlavní
 (async function() {
-  const events = await loadCSV(csvUrl);
+  const events = await loadXLSX(xlsxUrl);
   renderCalendar(events);
   startSlideshow(events);
 })();
