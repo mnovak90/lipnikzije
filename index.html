@@ -75,10 +75,28 @@
 
 <script>
 const xlsxUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4XvAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=xlsx";
-
 let eventsData = [];
 
-// Funkce pro načtení XLSX
+// Převod Excel datumu na DD.MM.YYYY
+function excelDateToJSDate(serial) {
+  const utc_days = Math.floor(serial - 25569);
+  const utc_value = utc_days * 86400;                                        
+  const date_info = new Date(utc_value * 1000);
+  const year = date_info.getUTCFullYear();
+  const month = String(date_info.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date_info.getUTCDate()).padStart(2, '0');
+  return `${day}.${month}.${year}`;
+}
+
+// Převod Excel času na HH:MM
+function excelTimeToString(timeSerial) {
+  const totalSeconds = Math.round(timeSerial * 24 * 60 * 60);
+  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
+// Načtení XLSX
 async function loadXLSX() {
   try {
     const response = await fetch(xlsxUrl);
@@ -100,9 +118,17 @@ function renderCalendar(events) {
   const container = document.getElementById('events');
   container.innerHTML = '';
   events.forEach(event => {
+    let date = event.start_date;
+    let time = event.start_time;
+
+    // Převod datumu
+    if (!isNaN(date)) date = excelDateToJSDate(Number(date));
+    // Převod času
+    if (!isNaN(time)) time = excelTimeToString(Number(time));
+
     const div = document.createElement('div');
     div.className = 'event';
-    div.innerHTML = `<strong>${event.start_date} ${event.start_time}</strong><br>${event.title}<br>${event.place}`;
+    div.innerHTML = `<strong>${date} ${time}</strong><br>${event.title}<br>${event.place}`;
     container.appendChild(div);
   });
 }
@@ -132,17 +158,16 @@ function startSlideshow() {
   }
 
   showNext();
-  setInterval(showNext, 8000); // každých 8 sekund nový plakát
+  setInterval(showNext, 8000);
 }
 
-// Načtení dat a spuštění slideshow
+// Spuštění
 loadXLSX().then(() => startSlideshow());
 
 // Automatická aktualizace každou hodinu
 setInterval(() => {
   loadXLSX();
-}, 3600000); // 3600000 ms = 1 hodina
-
+}, 3600000);
 </script>
 
 </body>
