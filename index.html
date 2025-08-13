@@ -33,16 +33,17 @@
         display: flex;
         align-items: center;
         justify-content: center;
-        position: relative;
         background: black;
+        position: relative;
+        overflow: hidden;
     }
     #poster img {
         max-width: 90%;
         max-height: 90%;
         object-fit: contain;
         opacity: 0;
-        transition: opacity 1s ease-in-out;
         position: absolute;
+        transition: opacity 1s ease-in-out;
     }
     #poster img.active {
         opacity: 1;
@@ -56,7 +57,6 @@
     </div>
     <div id="poster"></div>
 
-<!-- PapaParse knihovna pro korektní načtení CSV -->
 <script src="https://cdn.jsdelivr.net/npm/papaparse@5.4.1/papaparse.min.js"></script>
 <script>
 const CSV_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4XvAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=csv";
@@ -103,7 +103,13 @@ function renderPosters() {
     posters.forEach((url, index) => {
         let img = document.createElement("img");
         img.src = url;
-        if (index === 0) img.classList.add("active");
+        img.onload = () => {
+            if (index === 0) img.classList.add("active");
+        }
+        img.onerror = () => {
+            console.warn("Nepodařilo se načíst obrázek:", url);
+            img.remove();
+        }
         posterDiv.appendChild(img);
     });
 
@@ -113,8 +119,12 @@ function renderPosters() {
 function rotatePosters() {
     if (posters.length <= 1) return;
     const images = document.querySelectorAll("#poster img");
-    images[currentPosterIndex].classList.remove("active");
-    currentPosterIndex = (currentPosterIndex + 1) % posters.length;
+    if (images.length === 0) return;
+
+    const previousIndex = currentPosterIndex;
+    currentPosterIndex = (currentPosterIndex + 1) % images.length;
+
+    images[previousIndex].classList.remove("active");
     images[currentPosterIndex].classList.add("active");
 }
 
