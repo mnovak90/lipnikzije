@@ -2,170 +2,253 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Prezentace Lipník Žije</title>
+<title>LIPNÍK ŽIJE</title>
 <style>
-body {
+  body {
     margin: 0;
-    padding: 0;
     font-family: Arial, sans-serif;
-    background: url('https://mnovak90.github.io/lipnikzije/bg.jpg') no-repeat center center fixed;
-    background-size: cover;
     display: flex;
     height: 100vh;
-    color: white;
-}
-.left {
-    width: 40%;
-    background-color: #272726;
+    overflow: hidden;
+  }
+
+  /* Levá část 60 % */
+  #calendar {
+    width: 60%;
+    background: #272726;
     padding: 20px;
     box-sizing: border-box;
-    display: flex;
-    flex-direction: column;
-}
-.logo {
-    max-width: 50%; /* logo zmenšeno o polovinu */
-    height: auto;
-    margin-bottom: 10px;
-}
-.subtitle {
-    font-size: 1.2em;
-    margin-bottom: 20px;
-}
-.event-list {
-    flex: 1;
-    overflow: hidden;
-    display: flex;
-    flex-direction: column;
-}
-.event {
-    margin-bottom: 15px;
-}
-.event-date {
-    font-weight: bold;
-    color: #12a537;
-}
-.event-time {
+    overflow-y: auto;
     color: white;
-}
-.event-desc {
-    white-space: nowrap;
+  }
+  #calendar-header {
+    text-align: center;
+    margin-bottom: 10px;
+  }
+  /* Logo zmenšeno cca na polovinu (z pův. 80% na 40%) */
+  #calendar-header img {
+    max-width: 40%;
+    height: auto;
+  }
+  #calendar-subtitle {
+    text-align: center;
+    font-size: 0.9em;
+    margin-bottom: 20px;
+    color: white;
+  }
+  .event {
+    margin-bottom: 15px;
+    border-bottom: 1px solid #555;
+    padding-bottom: 10px;
+  }
+  .event strong.date { color: #12a537; }
+  .event strong.time { color: white; }
+
+  /* Pozvolná jednoproudová „běžící“ linka popisu */
+  .marquee {
     overflow: hidden;
-    display: inline-block;
-    animation: marquee 15s linear infinite;
-}
-@keyframes marquee {
-    0% { transform: translateX(100%); }
-    100% { transform: translateX(-100%); }
-}
-.right {
-    width: 60%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    flex-direction: column;
-}
-.poster-container {
-    display: flex;
-    flex-direction: column;
-    height: 100%;
-    width: 100%;
-}
-.poster {
-    flex: 0 0 80%; /* 80 % pro plakát */
-    display: flex;
-    align-items: center;
-    justify-content: center;
-}
-.poster img {
-    max-height: 100%;
-    max-width: 100%;
-    object-fit: contain;
-}
-.poster-info {
-    flex: 0 0 20%; /* 20 % pro text */
-    background: rgba(255, 255, 255, 0.85);
-    color: #272726;
-    padding: 15px;
+    white-space: nowrap;
     box-sizing: border-box;
+    animation: marquee 20s linear infinite;
+  }
+  @keyframes marquee {
+    0% { text-indent: 100%; }
+    100% { text-indent: -100%; }
+  }
+
+  /* Pravá část 40 % */
+  #slideshow-container {
+    width: 40%;
+    position: relative;
+    background: url("https://mnovak90.github.io/lipnikzije/bg.jpg") no-repeat center center;
+    background-size: cover;
+    color: #272726;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+  }
+
+  /* Rozdělení: 80 % plakát / 20 % info */
+  #poster-wrap {
+    flex: 0 0 80%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 10px 0;
+  }
+  #info {
+    flex: 0 0 20%;
+    background: rgba(255,255,255,0.9);
+    color: #272726;
     display: flex;
     flex-direction: column;
     justify-content: center;
-}
-.poster-title {
-    font-size: 1.5em;
-    font-weight: bold;
-    margin-bottom: 5px;
-}
-.poster-details {
-    font-size: 1em;
+    padding: 12px 24px;
+    box-sizing: border-box;
+  }
+
+  /* Plakát: drží pozici, nezvětšuje se mimo kontejner */
+  #poster {
+    max-height: 100%;
+    max-width: 90%;
+    object-fit: contain;
+    transition: opacity 1s;
+  }
+  #poster.fade-out { opacity: 0; }
+  #poster.fade-in { opacity: 1; }
+
+  /* Texty pod plakátem */
+  #poster-title {
+    font-size: 2em;          /* ponechán velký nadpis */
+    margin: 0 0 6px 0;
+    text-align: center;
+  }
+  #poster-description {
+    font-size: 1.05em;
+    text-align: center;
+    margin: 0 auto;
+    max-width: 90%;
     display: -webkit-box;
-    -webkit-line-clamp: 3; /* max 3 řádky */
+    -webkit-line-clamp: 3;    /* max 3 řádky */
     -webkit-box-orient: vertical;
     overflow: hidden;
-}
+  }
 </style>
 </head>
 <body>
 
-<div class="left">
-    <img src="https://mnovak90.github.io/lipnikzije/lipnikzije-bile.png" alt="Lipník Žije" class="logo">
-    <div class="subtitle">SOUHRN KULTURNÍCH AKCÍ V LIPNÍKU</div>
-    <div class="event-list" id="eventList">
-        <!-- Sem JavaScript doplní akce -->
-    </div>
+<!-- LEVÁ ČÁST -->
+<div id="calendar">
+  <div id="calendar-header">
+    <img src="https://mnovak90.github.io/lipnikzije/lipnikzije-bile.png" alt="LIPNÍK ŽIJE">
+  </div>
+  <div id="calendar-subtitle">SOUHRN KULTURNÍCH AKCÍ V LIPNÍKU</div>
+  <div id="events"></div>
 </div>
 
-<div class="right">
-    <div class="poster-container" id="posterContainer">
-        <!-- Slideshow plakátů -->
-    </div>
+<!-- PRAVÁ ČÁST -->
+<div id="slideshow-container">
+  <div id="poster-wrap">
+    <img id="poster" src="" alt="Plakát">
+  </div>
+  <div id="info">
+    <div id="poster-title"></div>
+    <div id="poster-description"></div>
+  </div>
 </div>
+
+<!-- SheetJS knihovna -->
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 
 <script>
-// Demo data pro test
-const events = [
-    { start: "16.08.2025", end: "18.08.2025", time: "19:00", title: "Letní kino: Film XYZ", desc: "Náměstí TGM - speciální letní projekce pod širým nebem pro všechny věkové kategorie." },
-    { start: "20.08.2025", end: "20.08.2025", time: "18:00", title: "Koncert kapely ABC", desc: "Park u řeky - energická hudební show, na kterou budete dlouho vzpomínat." }
-];
+const xlsxUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4XvAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=xlsx";
+let eventsData = [];
 
-const posters = [
-    { img: "https://via.placeholder.com/400x500", title: "Letní kino: Film XYZ", details: "Speciální letní projekce pod širým nebem." },
-    { img: "https://via.placeholder.com/400x500", title: "Koncert kapely ABC", details: "Energická hudební show v parku u řeky." }
-];
-
-// Naplnění levé části
-const eventList = document.getElementById('eventList');
-events.sort((a, b) => new Date(a.start.split(".").reverse().join("-")) - new Date(b.start.split(".").reverse().join("-")));
-events.forEach(ev => {
-    const e = document.createElement('div');
-    e.classList.add('event');
-    e.innerHTML = `<div class="event-date">${ev.start.replace(/\./g, '. ')} - ${ev.end.replace(/\./g, '. ')}</div>
-                   <div class="event-time">${ev.time}</div>
-                   <div class="event-desc">${ev.title} — ${ev.desc}</div>`;
-    eventList.appendChild(e);
-});
-
-// Slideshow
-let currentPoster = 0;
-const posterContainer = document.getElementById('posterContainer');
-
-function showPoster(index) {
-    const p = posters[index];
-    posterContainer.innerHTML = `
-        <div class="poster"><img src="${p.img}" alt="${p.title}"></div>
-        <div class="poster-info">
-            <div class="poster-title">${p.title}</div>
-            <div class="poster-details">${p.details}</div>
-        </div>
-    `;
+/* Převod Excel datumu na DD.MM.YYYY */
+function excelDateToJSDate(serial) {
+  if (typeof serial !== 'number' || isNaN(serial)) return '';
+  const utc_days = Math.floor(serial - 25569);
+  const utc_value = utc_days * 86400;
+  const date_info = new Date(utc_value * 1000);
+  const year = date_info.getUTCFullYear();
+  const month = String(date_info.getUTCMonth() + 1).padStart(2, '0');
+  const day = String(date_info.getUTCDate()).padStart(2, '0');
+  return `${day}.${month}.${year}`;
 }
 
-showPoster(currentPoster);
-setInterval(() => {
-    currentPoster = (currentPoster + 1) % posters.length;
-    showPoster(currentPoster);
-}, 5000);
+/* Převod Excel času na HH:MM */
+function excelTimeToString(timeSerial) {
+  if (typeof timeSerial !== 'number' || isNaN(timeSerial)) return '';
+  const totalSeconds = Math.round(timeSerial * 24 * 60 * 60);
+  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+  return `${hours}:${minutes}`;
+}
+
+/* Načtení XLSX z Google Sheets (původní logika zachována) */
+async function loadXLSX() {
+  try {
+    const response = await fetch(xlsxUrl);
+    const arrayBuffer = await response.arrayBuffer();
+    const data = new Uint8Array(arrayBuffer);
+    const workbook = XLSX.read(data, { type: "array" });
+    const firstSheet = workbook.SheetNames[0];
+    const sheet = workbook.Sheets[firstSheet];
+    const json = XLSX.utils.sheet_to_json(sheet);
+    eventsData = json || [];
+    renderCalendar(eventsData);
+  } catch(e) {
+    console.error("Chyba při načítání XLSX:", e);
+  }
+}
+
+/* Vykreslení kalendáře – beze změny, jen ochrana proti undefined */
+function renderCalendar(events) {
+  const container = document.getElementById('events');
+  container.innerHTML = '';
+  events.forEach(event => {
+    let date = event.start_date;
+    let time = event.start_time;
+
+    // Pokud je datum/čas číslo (excel), převedeme; jinak necháme jak je
+    if (!isNaN(date)) date = excelDateToJSDate(Number(date));
+    if (!isNaN(time)) time = excelTimeToString(Number(time));
+
+    const title = event.title || '';
+    const place = event.place || '';
+    const desc  = event.description || '';
+
+    const div = document.createElement('div');
+    div.className = 'event';
+    div.innerHTML = `
+      ${date ? `<strong class="date">${date}</strong>` : ''} 
+      ${time ? ` <strong class="time">${time}</strong>` : ''}<br>
+      ${title ? `${title}<br>` : ''}
+      ${place ? `${place}<br>` : ''}
+      ${desc ? `<div class="marquee">${desc}</div>` : ''}
+    `;
+    container.appendChild(div);
+  });
+}
+
+/* Slideshow – zachována logika, jen je rozdělen layout (80/20) */
+let slideshowIndex = 0;
+function startSlideshow() {
+  const poster = document.getElementById('poster');
+  const title = document.getElementById('poster-title');
+  const description = document.getElementById('poster-description');
+
+  function showNext() {
+    if (eventsData.length === 0) return;
+
+    const ev = eventsData[slideshowIndex] || {};
+    const img = ev.poster_url || '';
+    const t   = ev.title || '';
+    const d   = ev.description || '';
+
+    poster.classList.remove('fade-in');
+    poster.classList.add('fade-out');
+
+    setTimeout(() => {
+      poster.src = img;
+      title.textContent = t;
+      description.textContent = d;
+      poster.classList.remove('fade-out');
+      poster.classList.add('fade-in');
+    }, 1000);
+
+    slideshowIndex = (slideshowIndex + 1) % eventsData.length;
+  }
+
+  showNext();
+  setInterval(showNext, 8000);
+}
+
+/* Start */
+loadXLSX().then(() => startSlideshow());
+
+/* Automatická aktualizace každou hodinu – zachováno */
+setInterval(() => { loadXLSX(); }, 3600000);
 </script>
 
 </body>
