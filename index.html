@@ -4,250 +4,228 @@
 <meta charset="UTF-8">
 <title>LIPNÍK ŽIJE</title>
 <style>
-  body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    display: flex;
-    height: 100vh;
-    overflow: hidden;
-  }
+    body {
+        margin: 0;
+        font-family: Arial, sans-serif;
+        display: flex;
+        height: 100vh;
+        overflow: hidden;
+    }
 
-  /* Levá část 60 % */
-  #calendar {
-    width: 60%;
-    background: #272726;
-    padding: 20px;
-    box-sizing: border-box;
-    overflow-y: auto;
-    color: white;
-  }
-  #calendar-header {
-    text-align: center;
-    margin-bottom: 10px;
-  }
-  /* Logo zmenšeno cca na polovinu (z pův. 80% na 40%) */
-  #calendar-header img {
-    max-width: 40%;
-    height: auto;
-  }
-  #calendar-subtitle {
-    text-align: center;
-    font-size: 0.9em;
-    margin-bottom: 20px;
-    color: white;
-  }
-  .event {
-    margin-bottom: 15px;
-    border-bottom: 1px solid #555;
-    padding-bottom: 10px;
-  }
-  .event strong.date { color: #12a537; }
-  .event strong.time { color: white; }
+    /* Levý kalendář */
+    #calendar {
+        width: 60%;
+        background: #272726;
+        padding: 20px;
+        box-sizing: border-box;
+        overflow-y: auto;
+        color: white;
+    }
 
-  /* Pozvolná jednoproudová „běžící“ linka popisu */
-  .marquee {
-    overflow: hidden;
-    white-space: nowrap;
-    box-sizing: border-box;
-    animation: marquee 20s linear infinite;
-  }
-  @keyframes marquee {
-    0% { text-indent: 100%; }
-    100% { text-indent: -100%; }
-  }
+    #calendar-header {
+        text-align: center;
+        margin-bottom: 10px;
+    }
 
-  /* Pravá část 40 % */
-  #slideshow-container {
-    width: 40%;
-    position: relative;
-    background: url("https://mnovak90.github.io/lipnikzije/bg.jpg") no-repeat center center;
-    background-size: cover;
-    color: #272726;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
-  }
+    #calendar-header img {
+        max-width: 40%; /* zmenšeno na polovinu oproti původnímu 80% */
+        height: auto;
+    }
 
-  /* Rozdělení: 80 % plakát / 20 % info */
-  #poster-wrap {
-    flex: 0 0 80%;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    padding: 10px 0;
-  }
-  #info {
-    flex: 0 0 20%;
-    background: rgba(255,255,255,0.9);
-    color: #272726;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    padding: 12px 24px;
-    box-sizing: border-box;
-  }
+    #calendar-subtitle {
+        text-align: center;
+        font-size: 0.9em;
+        margin-bottom: 20px;
+        color: white;
+    }
 
-  /* Plakát: drží pozici, nezvětšuje se mimo kontejner */
-  #poster {
-    max-height: 100%;
-    max-width: 90%;
-    object-fit: contain;
-    transition: opacity 1s;
-  }
-  #poster.fade-out { opacity: 0; }
-  #poster.fade-in { opacity: 1; }
+    .event {
+        margin-bottom: 15px;
+        border-bottom: 1px solid #555;
+        padding-bottom: 10px;
+    }
 
-  /* Texty pod plakátem */
-  #poster-title {
-    font-size: 2em;          /* ponechán velký nadpis */
-    margin: 0 0 6px 0;
-    text-align: center;
-  }
-  #poster-description {
-    font-size: 1.05em;
-    text-align: center;
-    margin: 0 auto;
-    max-width: 90%;
-    display: -webkit-box;
-    -webkit-line-clamp: 3;    /* max 3 řádky */
-    -webkit-box-orient: vertical;
-    overflow: hidden;
-  }
+    .event strong.date {
+        color: #12a537;
+    }
+
+    .event strong.time {
+        color: white;
+    }
+
+    .marquee {
+        overflow: hidden;
+        white-space: nowrap;
+        box-sizing: border-box;
+        animation: marquee 20s linear infinite;
+    }
+
+    @keyframes marquee {
+        0% { text-indent: 100%; }
+        100% { text-indent: -100%; }
+    }
+
+    /* Pravá část s plakátem */
+    #slideshow-container {
+        width: 40%;
+        display: flex;
+        flex-direction: column;
+        background: url("https://mnovak90.github.io/lipnikzije/bg.jpg") no-repeat center center;
+        background-size: cover;
+        color: #272726;
+        padding: 10px;
+        box-sizing: border-box;
+    }
+
+    /* Plakát 80% výšky */
+    #poster {
+        max-width: 100%;
+        max-height: 80%;
+        object-fit: contain;
+        flex: 0 0 80%;
+        transition: opacity 1s;
+        align-self: center;
+    }
+
+    #poster.fade-out {
+        opacity: 0;
+    }
+
+    #poster.fade-in {
+        opacity: 1;
+    }
+
+    /* Textová část 20% výšky */
+    #poster-text {
+        flex: 0 0 20%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        text-align: center;
+        padding: 5px;
+        box-sizing: border-box;
+        overflow: hidden;
+    }
+
+    #poster-title {
+        font-size: 2em;
+        margin-bottom: 5px;
+        line-height: 1.2em;
+    }
+
+    #poster-description {
+        font-size: 1.1em;
+        max-height: calc(1.2em * 3); /* max 3 řádky */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-clamp: 3;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
+    }
 </style>
 </head>
 <body>
 
-<!-- LEVÁ ČÁST -->
 <div id="calendar">
-  <div id="calendar-header">
-    <img src="https://mnovak90.github.io/lipnikzije/lipnikzije-bile.png" alt="LIPNÍK ŽIJE">
-  </div>
-  <div id="calendar-subtitle">SOUHRN KULTURNÍCH AKCÍ V LIPNÍKU</div>
-  <div id="events"></div>
+    <div id="calendar-header">
+        <img src="https://mnovak90.github.io/lipnikzije/lipnikzije-bile.png" alt="LIPNÍK ŽIJE">
+    </div>
+    <div id="calendar-subtitle">SOUHRN KULTURNÍCH AKCÍ V LIPNÍKU</div>
+    <div id="events"></div>
 </div>
 
-<!-- PRAVÁ ČÁST -->
 <div id="slideshow-container">
-  <div id="poster-wrap">
     <img id="poster" src="" alt="Plakát">
-  </div>
-  <div id="info">
-    <div id="poster-title"></div>
-    <div id="poster-description"></div>
-  </div>
+    <div id="poster-text">
+        <div id="poster-title"></div>
+        <div id="poster-description"></div>
+    </div>
 </div>
 
-<!-- SheetJS knihovna -->
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
-
 <script>
 const xlsxUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4XvAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=xlsx";
 let eventsData = [];
 
-/* Převod Excel datumu na DD.MM.YYYY */
 function excelDateToJSDate(serial) {
-  if (typeof serial !== 'number' || isNaN(serial)) return '';
-  const utc_days = Math.floor(serial - 25569);
-  const utc_value = utc_days * 86400;
-  const date_info = new Date(utc_value * 1000);
-  const year = date_info.getUTCFullYear();
-  const month = String(date_info.getUTCMonth() + 1).padStart(2, '0');
-  const day = String(date_info.getUTCDate()).padStart(2, '0');
-  return `${day}.${month}.${year}`;
+    const utc_days = Math.floor(serial - 25569);
+    const utc_value = utc_days * 86400;
+    const date_info = new Date(utc_value * 1000);
+    const year = date_info.getUTCFullYear();
+    const month = String(date_info.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date_info.getUTCDate()).padStart(2, '0');
+    return `${day}.${month}.${year}`;
 }
 
-/* Převod Excel času na HH:MM */
 function excelTimeToString(timeSerial) {
-  if (typeof timeSerial !== 'number' || isNaN(timeSerial)) return '';
-  const totalSeconds = Math.round(timeSerial * 24 * 60 * 60);
-  const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
-  const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
-  return `${hours}:${minutes}`;
+    const totalSeconds = Math.round(timeSerial * 24 * 60 * 60);
+    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+    return `${hours}:${minutes}`;
 }
 
-/* Načtení XLSX z Google Sheets (původní logika zachována) */
 async function loadXLSX() {
-  try {
-    const response = await fetch(xlsxUrl);
-    const arrayBuffer = await response.arrayBuffer();
-    const data = new Uint8Array(arrayBuffer);
-    const workbook = XLSX.read(data, { type: "array" });
-    const firstSheet = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[firstSheet];
-    const json = XLSX.utils.sheet_to_json(sheet);
-    eventsData = json || [];
-    renderCalendar(eventsData);
-  } catch(e) {
-    console.error("Chyba při načítání XLSX:", e);
-  }
+    try {
+        const response = await fetch(xlsxUrl);
+        const arrayBuffer = await response.arrayBuffer();
+        const data = new Uint8Array(arrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const firstSheet = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[firstSheet];
+        const json = XLSX.utils.sheet_to_json(sheet);
+        eventsData = json;
+        renderCalendar(eventsData);
+    } catch(e) {
+        console.error("Chyba při načítání XLSX:", e);
+    }
 }
 
-/* Vykreslení kalendáře – beze změny, jen ochrana proti undefined */
 function renderCalendar(events) {
-  const container = document.getElementById('events');
-  container.innerHTML = '';
-  events.forEach(event => {
-    let date = event.start_date;
-    let time = event.start_time;
-
-    // Pokud je datum/čas číslo (excel), převedeme; jinak necháme jak je
-    if (!isNaN(date)) date = excelDateToJSDate(Number(date));
-    if (!isNaN(time)) time = excelTimeToString(Number(time));
-
-    const title = event.title || '';
-    const place = event.place || '';
-    const desc  = event.description || '';
-
-    const div = document.createElement('div');
-    div.className = 'event';
-    div.innerHTML = `
-      ${date ? `<strong class="date">${date}</strong>` : ''} 
-      ${time ? ` <strong class="time">${time}</strong>` : ''}<br>
-      ${title ? `${title}<br>` : ''}
-      ${place ? `${place}<br>` : ''}
-      ${desc ? `<div class="marquee">${desc}</div>` : ''}
-    `;
-    container.appendChild(div);
-  });
+    const container = document.getElementById('events');
+    container.innerHTML = '';
+    events.forEach(event => {
+        let date = event.start_date;
+        let time = event.start_time;
+        if (!isNaN(date)) date = excelDateToJSDate(Number(date));
+        if (!isNaN(time)) time = excelTimeToString(Number(time));
+        const div = document.createElement('div');
+        div.className = 'event';
+        div.innerHTML = `<strong class="date">${date}</strong> <strong class="time">${time}</strong><br>
+                         ${event.title}<br>
+                         ${event.place}<br>
+                         <div class="marquee">${event.description || ''}</div>`;
+        container.appendChild(div);
+    });
 }
 
-/* Slideshow – zachována logika, jen je rozdělen layout (80/20) */
 let slideshowIndex = 0;
 function startSlideshow() {
-  const poster = document.getElementById('poster');
-  const title = document.getElementById('poster-title');
-  const description = document.getElementById('poster-description');
+    const poster = document.getElementById('poster');
+    const title = document.getElementById('poster-title');
+    const description = document.getElementById('poster-description');
 
-  function showNext() {
-    if (eventsData.length === 0) return;
+    function showNext() {
+        if(eventsData.length === 0) return;
+        const event = eventsData[slideshowIndex];
+        poster.classList.remove('fade-in');
+        poster.classList.add('fade-out');
+        setTimeout(() => {
+            poster.src = event.poster_url || '';
+            title.textContent = event.title || '';
+            description.textContent = event.description || '';
+            poster.classList.remove('fade-out');
+            poster.classList.add('fade-in');
+        }, 1000);
+        slideshowIndex = (slideshowIndex + 1) % eventsData.length;
+    }
 
-    const ev = eventsData[slideshowIndex] || {};
-    const img = ev.poster_url || '';
-    const t   = ev.title || '';
-    const d   = ev.description || '';
-
-    poster.classList.remove('fade-in');
-    poster.classList.add('fade-out');
-
-    setTimeout(() => {
-      poster.src = img;
-      title.textContent = t;
-      description.textContent = d;
-      poster.classList.remove('fade-out');
-      poster.classList.add('fade-in');
-    }, 1000);
-
-    slideshowIndex = (slideshowIndex + 1) % eventsData.length;
-  }
-
-  showNext();
-  setInterval(showNext, 8000);
+    showNext();
+    setInterval(showNext, 8000);
 }
 
-/* Start */
 loadXLSX().then(() => startSlideshow());
-
-/* Automatická aktualizace každou hodinu – zachováno */
 setInterval(() => { loadXLSX(); }, 3600000);
 </script>
 
