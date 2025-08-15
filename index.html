@@ -2,195 +2,232 @@
 <html lang="cs">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Souhrn kulturních akcí v Lipníku</title>
+<title>LIPNÍK ŽIJE</title>
 <style>
     body {
         margin: 0;
-        background-color: black;
-        color: white;
         font-family: Arial, sans-serif;
+        display: flex;
+        height: 100vh;
         overflow: hidden;
     }
-    header {
-        text-align: center;
-        padding: 5px;
-    }
-    header img {
-        width: 15%;
-    }
-    header h2 {
-        margin-top: 5px;
-        font-size: 1.5em;
+
+    /* Levý kalendář */
+    #calendar {
+        width: 60%;
+        background: #272726;
+        padding: 20px;
+        box-sizing: border-box;
+        overflow-y: auto;
         color: white;
     }
-    main {
-        display: flex;
-        height: calc(100vh - 120px);
+
+    #calendar-header {
+        text-align: center;
+        margin-bottom: 10px;
     }
-    #events {
-        flex: 40%;
-        display: flex;
-        flex-direction: column;
-        overflow-y: auto;
-        padding: 10px;
-        box-sizing: border-box;
+
+    #calendar-header img {
+        max-width: 40%; /* zmenšeno na polovinu oproti původnímu 80% */
+        height: auto;
     }
-    #events .event {
+
+    #calendar-subtitle {
+        text-align: center;
+        font-size: 0.9em;
         margin-bottom: 20px;
+        color: white;
+    }
+
+    .event {
+        margin-bottom: 15px;
         border-bottom: 1px solid #555;
         padding-bottom: 10px;
     }
-    #events .date {
-        color: white;
-        font-weight: bold;
-        margin-right: 10px;
+
+    .event strong.date {
+        color: #12a537;
     }
-    #events .time {
+
+    .event strong.time {
         color: white;
-        font-weight: bold;
     }
+
     .marquee {
-        white-space: nowrap;
         overflow: hidden;
+        white-space: nowrap;
         box-sizing: border-box;
         animation: marquee 20s linear infinite;
-        display: block;
     }
-    .marquee:hover {
-        animation-play-state: paused;
-    }
+
     @keyframes marquee {
-        0% { transform: translateX(100%); }
-        100% { transform: translateX(-100%); }
+        0% { text-indent: 100%; }
+        100% { text-indent: -100%; }
     }
-    #slideshow {
-        flex: 60%;
+
+    /* Pravá část s plakátem */
+    #slideshow-container {
+        width: 40%;
         display: flex;
         flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background-color: white;
+        background: url("https://mnovak90.github.io/lipnikzije/bg.jpg") no-repeat center center;
+        background-size: cover;
         color: #272726;
-        position: relative;
-    }
-    #slideshow img {
-        max-height: 80%;
-        max-width: 90%;
-        object-fit: contain;
-    }
-    #slideshow .caption {
-        height: 20%;
         padding: 10px;
-        text-align: center;
         box-sizing: border-box;
     }
-    #slideshow .caption h3 {
-        margin: 5px 0;
-        font-size: 1.5em;
+
+    /* Plakát 80% výšky */
+    #poster {
+        max-width: 100%;
+        max-height: 80%;
+        object-fit: contain;
+        flex: 0 0 80%;
+        transition: opacity 1s;
+        align-self: center;
     }
-    #slideshow .caption p {
-        margin: 0;
-        font-size: 1em;
-        max-height: 3em;
+
+    #poster.fade-out {
+        opacity: 0;
+    }
+
+    #poster.fade-in {
+        opacity: 1;
+    }
+
+    /* Textová část 20% výšky */
+    #poster-text {
+        flex: 0 0 20%;
+        display: flex;
+        flex-direction: column;
+        justify-content: flex-start;
+        align-items: center;
+        text-align: center;
+        padding: 5px;
+        box-sizing: border-box;
         overflow: hidden;
+    }
+
+    #poster-title {
+        font-size: 2em;
+        margin-bottom: 5px;
+        line-height: 1.2em;
+    }
+
+    #poster-description {
+        font-size: 1.1em;
+        max-height: calc(1.2em * 3); /* max 3 řádky */
+        overflow: hidden;
+        text-overflow: ellipsis;
+        line-clamp: 3;
+        display: -webkit-box;
+        -webkit-line-clamp: 3;
+        -webkit-box-orient: vertical;
     }
 </style>
 </head>
 <body>
-<header>
-    <img src="logo.png" alt="Logo">
-    <h2>SOUHRN KULTURNÍCH AKCÍ V LIPNÍKU</h2>
-</header>
-<main>
-    <div id="events"></div>
-    <div id="slideshow">
-        <img id="slide-image" src="" alt="Plakát">
-        <div class="caption">
-            <h3 id="slide-title"></h3>
-            <p id="slide-details"></p>
-        </div>
-    </div>
-</main>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<div id="calendar">
+    <div id="calendar-header">
+        <img src="https://mnovak90.github.io/lipnikzije/lipnikzije-bile.png" alt="LIPNÍK ŽIJE">
+    </div>
+    <div id="calendar-subtitle">SOUHRN KULTURNÍCH AKCÍ V LIPNÍKU</div>
+    <div id="events"></div>
+</div>
+
+<div id="slideshow-container">
+    <img id="poster" src="" alt="Plakát">
+    <div id="poster-text">
+        <div id="poster-title"></div>
+        <div id="poster-description"></div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
 <script>
-const sheetUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4XvAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=xlsx";
+const xlsxUrl = "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4XvAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=xlsx";
 let eventsData = [];
-let currentSlide = 0;
 
 function excelDateToJSDate(serial) {
-    const utc_days  = Math.floor(serial - 25569);
+    const utc_days = Math.floor(serial - 25569);
     const utc_value = utc_days * 86400;
     const date_info = new Date(utc_value * 1000);
-    return `${String(date_info.getDate()).padStart(2, '0')}. ${String(date_info.getMonth()+1).padStart(2, '0')}. ${date_info.getFullYear()}`;
+    const year = date_info.getUTCFullYear();
+    const month = String(date_info.getUTCMonth() + 1).padStart(2, '0');
+    const day = String(date_info.getUTCDate()).padStart(2, '0');
+    return `${day}.${month}.${year}`;
 }
-function excelTimeToString(serial) {
-    const totalSeconds = Math.round(86400 * serial);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    return `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}`;
+
+function excelTimeToString(timeSerial) {
+    const totalSeconds = Math.round(timeSerial * 24 * 60 * 60);
+    const hours = String(Math.floor(totalSeconds / 3600)).padStart(2, '0');
+    const minutes = String(Math.floor((totalSeconds % 3600) / 60)).padStart(2, '0');
+    return `${hours}:${minutes}`;
+}
+
+async function loadXLSX() {
+    try {
+        const response = await fetch(xlsxUrl);
+        const arrayBuffer = await response.arrayBuffer();
+        const data = new Uint8Array(arrayBuffer);
+        const workbook = XLSX.read(data, { type: "array" });
+        const firstSheet = workbook.SheetNames[0];
+        const sheet = workbook.Sheets[firstSheet];
+        const json = XLSX.utils.sheet_to_json(sheet);
+        eventsData = json;
+        renderCalendar(eventsData);
+    } catch(e) {
+        console.error("Chyba při načítání XLSX:", e);
+    }
 }
 
 function renderCalendar(events) {
     const container = document.getElementById('events');
     container.innerHTML = '';
     events.forEach(event => {
-        let startDate = event.start_date;
-        let endDate = event.end_date;
+        let date = event.start_date;
         let time = event.start_time;
-
-        if (!isNaN(startDate)) startDate = excelDateToJSDate(Number(startDate));
-        if (!isNaN(endDate)) endDate = excelDateToJSDate(Number(endDate));
+        if (!isNaN(date)) date = excelDateToJSDate(Number(date));
         if (!isNaN(time)) time = excelTimeToString(Number(time));
-
-        let dateDisplay = startDate || '';
-        if (endDate && endDate !== startDate) {
-            dateDisplay += " – " + endDate;
-        }
-
         const div = document.createElement('div');
         div.className = 'event';
-        div.innerHTML = `<strong class="date">${dateDisplay}</strong> <strong class="time">${time || ''}</strong><br>
-                         ${event.title || ''}<br>
-                         ${event.place || ''}<br>
+        div.innerHTML = `<strong class="date">${date}</strong> <strong class="time">${time}</strong><br>
+                         ${event.title}<br>
+                         ${event.place}<br>
                          <div class="marquee">${event.description || ''}</div>`;
         container.appendChild(div);
     });
 }
 
-function startSlideshow(events) {
-    if (events.length === 0) return;
-    setInterval(() => {
-        const event = events[currentSlide];
-        let startDate = event.start_date;
-        let endDate = event.end_date;
-        if (!isNaN(startDate)) startDate = excelDateToJSDate(Number(startDate));
-        if (!isNaN(endDate)) endDate = excelDateToJSDate(Number(endDate));
+let slideshowIndex = 0;
+function startSlideshow() {
+    const poster = document.getElementById('poster');
+    const title = document.getElementById('poster-title');
+    const description = document.getElementById('poster-description');
 
-        let dateDisplay = startDate || '';
-        if (endDate && endDate !== startDate) {
-            dateDisplay += " – " + endDate;
-        }
+    function showNext() {
+        if(eventsData.length === 0) return;
+        const event = eventsData[slideshowIndex];
+        poster.classList.remove('fade-in');
+        poster.classList.add('fade-out');
+        setTimeout(() => {
+            poster.src = event.poster_url || '';
+            title.textContent = event.title || '';
+            description.textContent = event.description || '';
+            poster.classList.remove('fade-out');
+            poster.classList.add('fade-in');
+        }, 1000);
+        slideshowIndex = (slideshowIndex + 1) % eventsData.length;
+    }
 
-        document.getElementById('slide-image').src = event.image || '';
-        document.getElementById('slide-title').textContent = event.title || '';
-        document.getElementById('slide-details').textContent = `${dateDisplay} ${event.place || ''}`;
-
-        currentSlide = (currentSlide + 1) % events.length;
-    }, 5000);
+    showNext();
+    setInterval(showNext, 8000);
 }
 
-fetch(sheetUrl)
-    .then(res => res.arrayBuffer())
-    .then(data => {
-        const workbook = XLSX.read(data, { type: 'array' });
-        const firstSheetName = workbook.SheetNames[0];
-        const worksheet = workbook.Sheets[firstSheetName];
-        eventsData = XLSX.utils.sheet_to_json(worksheet);
-        renderCalendar(eventsData);
-        startSlideshow(eventsData);
-    });
+loadXLSX().then(() => startSlideshow());
+setInterval(() => { loadXLSX(); }, 3600000);
 </script>
+
 </body>
 </html>
