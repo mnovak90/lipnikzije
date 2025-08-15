@@ -28,7 +28,7 @@
     }
 
     #calendar-header img {
-        max-width: 40%; /* zmenšeno na polovinu oproti původnímu 80% */
+        max-width: 40%;
         height: auto;
     }
 
@@ -53,16 +53,24 @@
         color: white;
     }
 
-    .marquee {
+    .marquee-container {
         overflow: hidden;
         white-space: nowrap;
         box-sizing: border-box;
-        animation: marquee 20s linear infinite;
+        position: relative;
+        width: 100%;
+    }
+
+    .marquee-text {
+        display: inline-block;
+        padding-right: 10ch; /* mezery na konci textu */
+        will-change: transform;
+        animation: marquee 30s linear infinite;
     }
 
     @keyframes marquee {
-        0% { text-indent: 100%; }
-        100% { text-indent: -100%; }
+        0% { transform: translateX(100%); }
+        100% { transform: translateX(-100%); }
     }
 
     /* Pravá část s plakátem */
@@ -116,7 +124,7 @@
 
     #poster-description {
         font-size: 1.1em;
-        max-height: calc(1.2em * 3); /* max 3 řádky */
+        max-height: calc(1.2em * 3);
         overflow: hidden;
         text-overflow: ellipsis;
         line-clamp: 3;
@@ -194,7 +202,6 @@ function renderCalendar(events) {
         if (!isNaN(endDate)) endDate = excelDateToJSDate(Number(endDate));
         if (!isNaN(time)) time = excelTimeToString(Number(time));
 
-        // zobrazit období, pokud je end_date k dispozici a liší se od startu
         let dateDisplay = date || '';
         if (endDate && endDate !== date) {
             dateDisplay += ' - ' + endDate;
@@ -202,10 +209,20 @@ function renderCalendar(events) {
 
         const div = document.createElement('div');
         div.className = 'event';
-        div.innerHTML = `<strong class="date">${dateDisplay}</strong> <strong class="time">${time || ''}</strong><br>
-                         ${event.title || ''}<br>
-                         ${event.place || ''}<br>
-                         <div class="marquee">${event.description || ''}</div>`;
+
+        const description = event.description || '';
+        if(description.length > 60) {
+            div.innerHTML = `<strong class="date">${dateDisplay}</strong> <strong class="time">${time || ''}</strong><br>
+                             ${event.title || ''}<br>
+                             ${event.place || ''}<br>
+                             <div class="marquee-container"><div class="marquee-text">${description}          </div></div>`;
+        } else {
+            div.innerHTML = `<strong class="date">${dateDisplay}</strong> <strong class="time">${time || ''}</strong><br>
+                             ${event.title || ''}<br>
+                             ${event.place || ''}<br>
+                             <div>${description}</div>`;
+        }
+
         container.appendChild(div);
     });
 }
