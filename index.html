@@ -187,14 +187,24 @@ function renderCalendar(events) {
     container.innerHTML = '';
     events.forEach(event => {
         let date = event.start_date;
+        let endDate = event.end_date;
         let time = event.start_time;
+
         if (!isNaN(date)) date = excelDateToJSDate(Number(date));
+        if (!isNaN(endDate)) endDate = excelDateToJSDate(Number(endDate));
         if (!isNaN(time)) time = excelTimeToString(Number(time));
+
+        // zobrazit období, pokud je end_date k dispozici a liší se od startu
+        let dateDisplay = date || '';
+        if (endDate && endDate !== date) {
+            dateDisplay += ' - ' + endDate;
+        }
+
         const div = document.createElement('div');
         div.className = 'event';
-        div.innerHTML = `<strong class="date">${date}</strong> <strong class="time">${time}</strong><br>
-                         ${event.title}<br>
-                         ${event.place}<br>
+        div.innerHTML = `<strong class="date">${dateDisplay}</strong> <strong class="time">${time || ''}</strong><br>
+                         ${event.title || ''}<br>
+                         ${event.place || ''}<br>
                          <div class="marquee">${event.description || ''}</div>`;
         container.appendChild(div);
     });
