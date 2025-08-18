@@ -1,723 +1,211 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LIPNÍK ŽIJE! - Kalendář akcí</title>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'Arial', sans-serif;
-            background-color: #272726;
-            color: white;
-            overflow-x: hidden;
-        }
-
-        .container {
-            display: flex;
-            min-height: 100vh;
-            flex-direction: column;
-        }
-
-        .main-content {
-            display: flex;
-            flex: 1;
-            flex-direction: row;
-        }
-
-        .left-panel {
-            flex: 1;
-            padding: 20px;
-            background-color: #272726;
-            min-width: 300px;
-        }
-
-        .right-panel {
-            flex: 1;
-            background-image: url('https://mnovak90.github.io/lipnikzije/bg.jpg');
-            background-size: cover;
-            background-position: center;
-            position: relative;
-            padding: 20px;
-            min-height: 100vh;
-        }
-
-        .right-panel::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: rgba(0, 0, 0, 0.7);
-            z-index: 1;
-        }
-
-        .right-content {
-            position: relative;
-            z-index: 2;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .logo-section {
-            display: flex;
-            align-items: center;
-            margin-bottom: 30px;
-            animation: fadeInUp 1s ease-out;
-        }
-
-        .logo {
-            width: 120px;
-            height: auto;
-            margin-right: 20px;
-            transition: transform 0.3s ease;
-        }
-
-        .logo:hover {
-            transform: scale(1.05);
-        }
-
-        .logo-text {
-            font-size: 18px;
-            font-weight: bold;
-            line-height: 1.3;
-        }
-
-        .calendar-section {
-            margin-bottom: 30px;
-            animation: fadeInUp 1s ease-out 0.2s both;
-        }
-
-        .calendar-header {
-            background-color: #12a537;
-            padding: 15px;
-            text-align: center;
-            font-size: 20px;
-            font-weight: bold;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-radius: 8px 8px 0 0;
-        }
-
-        .nav-button {
-            background: none;
-            border: none;
-            color: white;
-            font-size: 24px;
-            cursor: pointer;
-            padding: 5px 10px;
-            border-radius: 4px;
-            transition: all 0.3s ease;
-        }
-
-        .nav-button:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-            transform: scale(1.1);
-        }
-
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 2px;
-            background-color: #12a537;
-            padding: 2px;
-            border-radius: 0 0 8px 8px;
-        }
-
-        .calendar-day {
-            aspect-ratio: 1;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: bold;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .calendar-day::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            width: 0;
-            height: 0;
-            background-color: rgba(255, 255, 255, 0.2);
-            border-radius: 50%;
-            transition: all 0.3s ease;
-            transform: translate(-50%, -50%);
-        }
-
-        .calendar-day:hover::before {
-            width: 100%;
-            height: 100%;
-        }
-
-        .calendar-day.past {
-            background-color: #555;
-            color: #999;
-        }
-
-        .calendar-day.today {
-            background-color: #12a537;
-            color: white;
-            box-shadow: 0 0 10px rgba(18, 165, 55, 0.5);
-        }
-
-        .calendar-day.sunday {
-            background-color: #bddbb0;
-            color: #272726;
-        }
-
-        .calendar-day.selected {
-            background-color: #12a537;
-            color: white;
-            transform: scale(0.95);
-            box-shadow: inset 0 0 0 3px white;
-        }
-
-        .current-date {
-            font-size: 24px;
-            font-weight: bold;
-            margin: 20px 0;
-            text-align: center;
-            animation: fadeIn 0.5s ease;
-        }
-
-        .events-section {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
-            animation: fadeInUp 0.5s ease;
-        }
-
-        .event-item {
-            background-color: rgba(255, 255, 255, 0.1);
-            padding: 15px;
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border: 2px solid transparent;
-        }
-
-        .event-item:hover {
-            background-color: rgba(255, 255, 255, 0.2);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-        }
-
-        .event-item.active {
-            border-color: white;
-            background-color: rgba(255, 255, 255, 0.2);
-        }
-
-        .event-icon {
-            width: 24px;
-            height: 24px;
-            margin-right: 10px;
-            vertical-align: middle;
-            transition: transform 0.3s ease;
-        }
-
-        .event-item:hover .event-icon {
-            transform: scale(1.1);
-        }
-
-        .event-date {
-            color: #12a537;
-            font-weight: bold;
-        }
-
-        .event-time {
-            color: white;
-            font-weight: normal;
-        }
-
-        .event-title {
-            font-size: 16px;
-            font-weight: bold;
-            margin-top: 5px;
-            text-transform: uppercase;
-        }
-
-        .right-event-content {
-            animation: fadeIn 0.5s ease;
-        }
-
-        .right-event-title {
-            font-size: 28px;
-            font-weight: bold;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .right-event-separator {
-            height: 3px;
-            background-color: #12a537;
-            margin: 20px 0;
-            border-radius: 2px;
-        }
-
-        .right-event-date {
-            font-size: 18px;
-            margin-bottom: 20px;
-            text-align: center;
-        }
-
-        .right-event-poster {
-            width: 100%;
-            max-width: 400px;
-            height: 300px;
-            object-fit: cover;
-            border-radius: 8px;
-            margin: 20px auto;
-            display: block;
-            transition: all 0.3s ease;
-        }
-
-        .right-event-poster:hover {
-            transform: scale(1.02);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
-        }
-
-        .right-event-description {
-            font-size: 16px;
-            line-height: 1.6;
-            margin-top: 20px;
-        }
-
-        .info-bar {
-            background-color: #12a537;
-            padding: 15px;
-            text-align: center;
-            font-weight: bold;
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            z-index: 1000;
-            animation: slideInUp 0.5s ease;
-        }
-
-        .info-bar-content {
-            animation: fadeIn 0.5s ease;
-        }
-
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-
-        @keyframes fadeInUp {
-            from {
-                opacity: 0;
-                transform: translateY(30px);
-            }
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        @keyframes slideInUp {
-            from {
-                transform: translateY(100%);
-            }
-            to {
-                transform: translateY(0);
-            }
-        }
-
-        @media (max-width: 768px) {
-            .main-content {
-                flex-direction: column;
-            }
-
-            .left-panel {
-                min-width: auto;
-                padding: 15px;
-            }
-
-            .right-panel {
-                min-height: 50vh;
-            }
-
-            .events-section {
-                grid-template-columns: 1fr;
-            }
-
-            .logo-section {
-                flex-direction: column;
-                text-align: center;
-            }
-
-            .logo {
-                margin-right: 0;
-                margin-bottom: 10px;
-            }
-
-            .calendar-grid {
-                font-size: 14px;
-            }
-
-            .right-event-title {
-                font-size: 24px;
-            }
-        }
-
-        @media (max-width: 480px) {
-            .calendar-header {
-                font-size: 16px;
-                padding: 10px;
-            }
-
-            .current-date {
-                font-size: 20px;
-            }
-
-            .event-item {
-                padding: 10px;
-            }
-
-            .right-event-poster {
-                height: 200px;
-            }
-        }
-    </style>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>LIPNÍK ŽIJE – Kalendář akcí</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
+<style>
+  :root{ --green:#12a537; --green-light:#bddbb0; --black:#272726; --tile-past:#3a3a39; --white:#ffffff; }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{ margin:0; font-family:Inter,system-ui,Segoe UI,Roboto,Helvetica,Arial,sans-serif; color:var(--white); background:var(--black); overflow-x:hidden; }
+  .app{ min-height:100dvh; display:grid; grid-template-columns: 1fr; grid-template-rows:auto auto 48px; }
+  @media (min-width: 1024px){ .app{ grid-template-columns: minmax(420px,1.1fr) 1fr; grid-template-rows:auto 48px; } }
+  .left{ padding:24px 20px 80px; background:var(--black); }
+  .brand{ display:flex;align-items:center;gap:16px;margin-bottom:18px; }
+  .brand img{height:56px;width:auto;}
+  h1{font-size:28px;line-height:1.1;margin:0;font-weight:800}
+  h1 span{display:block;font-size:14px;font-weight:400;color:#c7c7c5;margin-top:4px}
+  .calendar{ margin:14px 0 18px; background:#111; border-radius:12px; padding:14px; box-shadow:0 8px 20px rgba(0,0,0,.25); }
+  .cal-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .month-pill{background:var(--green);color:#fff;padding:10px 14px;border-radius:10px;font-weight:700;letter-spacing:.04em}
+  .navbtn{background:#0e8f2e;border:none;color:#fff;padding:8px 12px;border-radius:10px;cursor:pointer;font-weight:700}
+  .navbtn:disabled{opacity:.4;cursor:not-allowed}
+  .grid{display:grid;grid-template-columns:repeat(16,1fr);gap:8px}
+  .tile{padding:10px 0;border-radius:8px;text-align:center;font-weight:700;background:#fff;color:#111;user-select:none;position:relative;}
+  .tile.past{background:var(--tile-past);color:#b9b9b8}
+  .tile.sunday{background:var(--green-light);}
+  .tile.selected{outline:3px solid var(--green)}
+  .today-badge{display:inline-flex;align-items:center;gap:8px;margin:8px 0 6px;color:#d7d7d6}
+  .today-badge .dot{width:8px;height:8px;border-radius:99px;background:var(--green)}
+  .events{display:grid;grid-template-columns:1fr;gap:12px}
+  @media(min-width:720px){.events{grid-template-columns:1fr 1fr}}
+  .event-card{display:grid;grid-template-columns:44px 1fr;gap:12px;align-items:center;background:#151515;border-radius:12px;padding:12px;border:1px solid transparent;cursor:pointer;min-height:78px}
+  .event-card.active{border-color:#fff}
+  .event-card:hover{border-color:rgba(255,255,255,.5)}
+  .event-icon{height:34px;width:34px;display:flex;align-items:center;justify-content:center}
+  .event-icon img{max-width:100%;max-height:100%}
+  .line1{font-size:13px;line-height:1.35;}
+  .line1 .date{color:var(--green);font-weight:800}
+  .line1 .time{color:#fff}
+  .line2{font-size:15px;font-weight:800;letter-spacing:.02em;margin-top:2px;text-transform:uppercase}
+  .empty{padding:14px;border-radius:10px;background:#141414;color:#bdbdbb}
+  .right{ position:relative;min-height:400px; background: url('https://mnovak90.github.io/lipnikzije/bg.jpg') center/cover no-repeat; padding:20px 20px 80px; border-left:1px solid #3a3a39; }
+  .right-inner{max-width:900px;margin:0 auto}
+  .right-title{font-size:26px;font-weight:900;line-height:1.15;margin:0 0 10px;text-transform:uppercase}
+  .hr{height:2px;background:#000;opacity:.9;margin:8px 0 14px}
+  .when{font-size:15px;color:#f1f1f1;margin-bottom:10px}
+  .media{width:100%;aspect-ratio:16/10;background:#000;border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(0,0,0,.35)}
+  .media img{width:100%;height:100%;object-fit:cover;display:block}
+  .desc{margin-top:10px;color:#f3f3f2;opacity:.95;white-space:pre-wrap}
+  .controls{display:flex;gap:12px;align-items:center;margin-top:10px}
+  .chip{background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.3);padding:6px 10px;border-radius:999px;font-size:12px;cursor:pointer}
+  .ticker{position:fixed;left:0;right:0;bottom:0;height:48px;background:var(--green);color:#001c06;display:flex;align-items:center;gap:16px;padding:0 16px;z-index:30;font-weight:700}
+  .ticker .label{background:#0e8f2e;color:#fff;padding:6px 10px;border-radius:8px;font-size:12px;letter-spacing:.06em}
+  .ticker .msg{flex:1;overflow:hidden;white-space:nowrap;text-overflow:ellipsis}
+  .sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);border:0}
+</style>
 </head>
 <body>
-    <div class="container">
-        <div class="main-content">
-            <div class="left-panel">
-                <div class="logo-section">
-                    <img src="https://mnovak90.github.io/lipnikzije/lipnikzije-bile.png" alt="Lipník Žije Logo" class="logo">
-                    <div class="logo-text">KALENDÁŘ AKCÍ<br>V LIPNÍKU NAD BEČVOU<br>A OKOLÍ</div>
-                </div>
-
-                <div class="calendar-section">
-                    <div class="calendar-header">
-                        <button class="nav-button" onclick="changeMonth(-1)">◀</button>
-                        <span id="monthYear"></span>
-                        <button class="nav-button" onclick="changeMonth(1)">▶</button>
-                    </div>
-                    <div class="calendar-grid" id="calendarGrid"></div>
-                </div>
-
-                <div class="current-date" id="currentDate"></div>
-
-                <div class="events-section" id="eventsSection"></div>
-            </div>
-
-            <div class="right-panel">
-                <div class="right-content" id="rightContent">
-                    <div class="right-event-content">
-                        <div class="right-event-title">Vítejte v Lipníku nad Bečvou</div>
-                        <div class="right-event-separator"></div>
-                        <div class="right-event-description">
-                            Vyberte datum v kalendáři pro zobrazení akcí.
-                        </div>
-                    </div>
-                </div>
-            </div>
+  <div class="app">
+    <section class="left">
+      <div class="brand">
+        <img src="https://mnovak90.github.io/lipnikzije/lipnikzije-bile.png" alt="LIPNÍK ŽIJE logo" />
+        <div>
+          <h1>LIPNÍK ŽIJE! <span>Kalendář akcí v Lipníku nad Bečvou a okolí</span></h1>
         </div>
+      </div>
 
-        <div class="info-bar">
-            <div class="info-bar-content" id="infoBarContent">
-                Načítání informací...
-            </div>
+      <div class="calendar" id="calendar">
+        <div class="cal-header">
+          <button class="navbtn" id="prevMonth" aria-label="Předchozí měsíc">◀</button>
+          <div class="month-pill" id="monthLabel">NAČÍTÁM…</div>
+          <button class="navbtn" id="nextMonth" aria-label="Další měsíc">▶</button>
         </div>
+        <div class="grid" id="daysGrid" aria-live="polite"></div>
+      </div>
+
+      <div class="today-badge"><span class="dot"></span>
+        <span id="selectedDateLabel">Načítám datum…</span>
+      </div>
+
+      <div class="events" id="eventsLeft"></div>
+      <div class="empty" id="noEvents" style="display:none">Pro zvolený den nejsou žádné akce.</div>
+    </section>
+
+    <section class="right">
+      <div class="right-inner">
+        <h2 class="right-title" id="rightTitle">Vyberte akci…</h2>
+        <div class="hr"></div>
+        <div class="when" id="rightWhen"></div>
+        <div class="media" id="rightMedia"><img alt="" /></div>
+        <div class="desc" id="rightDesc"></div>
+        <div class="controls" id="rightControls" style="display:none">
+          <button class="chip" id="resumeRotation">Obnovit rotaci</button>
+        </div>
+      </div>
+    </section>
+
+    <div class="ticker" id="ticker" role="status" aria-live="polite">
+      <span class="label">INFO</span>
+      <span class="msg" id="tickerMsg">Načítám…</span>
     </div>
+  </div>
 
-    <script>
-        let eventsData = [];
-        let currentMonth = new Date().getMonth();
-        let currentYear = new Date().getFullYear();
-        let selectedDate = new Date();
-        let rightPanelInterval = null;
-        let infoBarInterval = null;
-        let currentRightEventIndex = 0;
-        let isRightPanelLocked = false;
+<script>
+(function(){
+  const XLSX_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4XvAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=xlsx';
 
-        const monthNames = [
-            'LEDEN', 'ÚNOR', 'BŘEZEN', 'DUBEN', 'KVĚTEN', 'ČERVEN',
-            'ČERVENEC', 'SRPEN', 'ZÁŘÍ', 'ŘÍJEN', 'LISTOPAD', 'PROSINEC'
-        ];
+  // Pomocné
+  const stripDiacritics = (s)=> (s||'').normalize('NFD').replace(/[\u0300-\u036f]+/g,'');
+  const onlyLetters = (s)=> (s||'').toLowerCase().replace(/[^a-z\s]/g,'').trim();
+  function excelDateToJS(n){ if(typeof n !== 'number') return null; const epoch = new Date(Date.UTC(1899,11,30)); return new Date(epoch.getTime()+ n*86400000); }
+  function toDate(val){ if(val===undefined||val===null||val==='') return null; if(val instanceof Date) return val; if(typeof val==='number') return excelDateToJS(val); const d=new Date(String(val)); return isNaN(d)? null : d; }
+  function resolveIcon(type){ const norm = onlyLetters(stripDiacritics(type||'')); if(/\bdivadel/.test(norm)) return 'https://mnovak90.github.io/lipnikzije/ikony/divadelni.svg'; if(/\bhudebn/.test(norm)) return 'https://mnovak90.github.io/lipnikzije/ikony/hudebni.svg'; if(/\bfilm\b/.test(norm)) return 'https://mnovak90.github.io/lipnikzije/ikony/film.svg'; if(/\bsport\b/.test(norm)) return 'https://mnovak90.github.io/lipnikzije/ikony/sport.svg'; if(/\btradic/.test(norm)) return 'https://mnovak90.github.io/lipnikzije/ikony/tradicni.svg'; if(/\btrhy\b/.test(norm)) return 'https://mnovak90.github.io/lipnikzije/ikony/trhy.svg'; if(/\bvystav/.test(norm)) return 'https://mnovak90.github.io/lipnikzije/ikony/vystava.svg'; if(/\bvzdelav/.test(norm)) return 'https://mnovak90.github.io/lipnikzije/ikony/vzdelavaci.svg'; return 'https://mnovak90.github.io/lipnikzije/ikony/jine.svg'; }
 
-        const dayNames = ['Ne', 'Po', 'Út', 'St', 'Čt', 'Pá', 'So'];
+  const els = { monthLabel:document.getElementById('monthLabel'), daysGrid:document.getElementById('daysGrid'), selectedDateLabel:document.getElementById('selectedDateLabel'), eventsLeft:document.getElementById('eventsLeft'), noEvents:document.getElementById('noEvents'), rightTitle:document.getElementById('rightTitle'), rightWhen:document.getElementById('rightWhen'), rightMedia:document.getElementById('rightMedia'), rightDesc:document.getElementById('rightDesc'), rightControls:document.getElementById('rightControls'), resumeRotation:document.getElementById('resumeRotation'), tickerMsg:document.getElementById('tickerMsg'), prevMonth:document.getElementById('prevMonth'), nextMonth:document.getElementById('nextMonth') };
 
-        const typeIcons = {
-            'divadelní': 'https://mnovak90.github.io/lipnikzije/ikony/divadelni.svg',
-            'film': 'https://mnovak90.github.io/lipnikzije/ikony/film.svg',
-            'hudební': 'https://mnovak90.github.io/lipnikzije/ikony/hudebni.svg',
-            'jiné': 'https://mnovak90.github.io/lipnikzije/ikony/jine.svg',
-            'sport': 'https://mnovak90.github.io/lipnikzije/ikony/sport.svg',
-            'tradicni': 'https://mnovak90.github.io/lipnikzije/ikony/tradicni.svg',
-            'trhy': 'https://mnovak90.github.io/lipnikzije/ikony/trhy.svg',
-            'vystava': 'https://mnovak90.github.io/lipnikzije/ikony/vystava.svg',
-            'vzdelavaci': 'https://mnovak90.github.io/lipnikzije/ikony/vzdelavaci.svg'
-        };
+  let rows=[]; let infoStripe=[]; let today=new Date(); let currentMonth=new Date(today.getFullYear(),today.getMonth(),1); let selectedDate=new Date(today.getFullYear(),today.getMonth(),today.getDate());
+  let rotTimer=null, imgTimer=null, rotationPaused=false, currentEventIndex=0, dayEvents=[];
 
-        async function loadData() {
-            try {
-                const response = await fetch('https://docs.google.com/spreadsheets/d/e/2PACX-1vQ2ppsqGwnoqU4XvAxp-SYbQtzzoLxFcaKT5X8iojVLPDvyHGpOVYQDztvFaRdOm-9SzDoFZ9PNoKKZ/pub?output=xlsx');
-                const arrayBuffer = await response.arrayBuffer();
-                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
-                const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+  const fmtDateDMY = (d)=> `${String(d.getDate()).padStart(2,'0')}. ${String(d.getMonth()+1).padStart(2,'0')}. ${d.getFullYear()}`;
+  const fmtDateDM = (d)=> `${String(d.getDate()).padStart(2,'0')}. ${String(d.getMonth()+1).padStart(2,'0')}.`;
+  const fmtTimeHM = (t)=> `${String(t.getHours()).padStart(2,'0')}:${String(t.getMinutes()).padStart(2,'0')}`;
+  const weekdayName = (d)=> new Intl.DateTimeFormat('cs-CZ',{weekday:'long'}).format(d);
+  const zeroTime = (d)=>{ const nd=new Date(d); nd.setHours(0,0,0,0); return nd; };
+  const intersectingWithDay = (ev,day)=>{ const ds=zeroTime(ev.start); const de=zeroTime(ev.end||ev.start); const dd=zeroTime(day); return dd>=ds && dd<=de; };
+  const isFutureOrToday = (ev)=> zeroTime(ev.end||ev.start) >= zeroTime(today);
 
-                eventsData = [];
-                for (let i = 1; i < jsonData.length; i++) {
-                    const row = jsonData[i];
-                    if (row[0]) { // Pokud má datum začátku
-                        const event = {
-                            startDate: row[0],
-                            startTime: row[1] || '',
-                            endDate: row[2] || '',
-                            title: row[3] || '',
-                            type: row[4] || 'jiné',
-                            description: row[5] || '',
-                            poster: row[6] || '',
-                            photo: row[7] || '',
-                            location: row[8] || '',
-                            organizer: row[9] || '',
-                            infoBar: row[10] || ''
-                        };
-                        
-                        // Filtrovat pouze budoucí a současné akce
-                        const eventDate = new Date(event.startDate);
-                        const today = new Date();
-                        today.setHours(0, 0, 0, 0);
-                        
-                        if (eventDate >= today) {
-                            eventsData.push(event);
-                        }
-                    }
-                }
+  function parseSheetToRows(wb){
+    const sheet = wb.Sheets[wb.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(sheet,{header:1,defval:'',raw:true});
+    if(!json.length) return [];
+    const headers = json[0].map(h=>String(h).trim().toLowerCase());
+    const idx = (name)=> headers.indexOf(name);
+    const out=[]; infoStripe=[];
+    for(let i=1;i<json.length;i++){
+      const r=json[i]; if(!r||r.length===0) continue;
+      const get=(name)=> r[idx(name)];
+      const sVal=get('zacatek-datum'); const eVal=get('konec_datum');
+      const start=toDate(sVal); if(!start) continue;
+      const end=toDate(eVal);
+      const tStr=String(get('zacatek_cas')||'').trim(); if(tStr){ const [h,m]=tStr.split(':'); if(!isNaN(h)) start.setHours(+h, +(m||0),0,0); }
+      const row={ start, end, title:String(get('nazev')||'').trim(), type:String(get('typ')||'').trim(), desc:String(get('popis')||'').trim(), poster:String(get('plakat')||'').trim(), photo:String(get('fotografie')||'').trim(), place:String(get('misto')||'').trim(), org:String(get('poradatel')||'').trim(), ticker:String(get('informativni_pruh')||'').trim() };
+      if(isFutureOrToday(row)) out.push(row);
+      if(row.ticker) infoStripe.push(row.ticker);
+    }
+    out.sort((a,b)=>a.start-b.start); infoStripe=[...new Set(infoStripe.filter(Boolean))];
+    return out;
+  }
 
-                renderCalendar();
-                updateCurrentDate();
-                updateEventsForDate();
-                startInfoBarRotation();
-                startRightPanelRotation();
-            } catch (error) {
-                console.error('Chyba při načítání dat:', error);
-            }
-        }
+  function renderMonth(){
+    els.monthLabel.textContent=new Intl.DateTimeFormat('cs-CZ',{month:'long',year:'numeric'}).format(currentMonth).toUpperCase();
+    els.daysGrid.innerHTML='';
+    const y=currentMonth.getFullYear(), m=currentMonth.getMonth();
+    const last=new Date(y,m+1,0).getDate();
+    els.daysGrid.style.gridTemplateColumns=`repeat(${Math.max(16,last)},1fr)`;
+    for(let d=1; d<=last; d++){
+      const day=new Date(y,m,d);
+      const tile=document.createElement('button'); tile.className='tile'; tile.type='button'; tile.textContent=d;
+      if(day < zeroTime(today)) tile.classList.add('past');
+      if(day.getDay()===0) tile.classList.add('sunday');
+      if(zeroTime(day).getTime()===zeroTime(selectedDate).getTime()) tile.classList.add('selected');
+      tile.addEventListener('click',()=>{ selectedDate=new Date(y,m,d); updateSelectedDay(); renderMonth(); });
+      els.daysGrid.appendChild(tile);
+    }
+  }
 
-        function renderCalendar() {
-            const grid = document.getElementById('calendarGrid');
-            const monthYearElement = document.getElementById('monthYear');
-            
-            monthYearElement.textContent = `${monthNames[currentMonth]} ${currentYear}`;
-            
-            const firstDay = new Date(currentYear, currentMonth, 1);
-            const lastDay = new Date(currentYear, currentMonth + 1, 0);
-            const startDate = new Date(firstDay);
-            startDate.setDate(startDate.getDate() - firstDay.getDay());
-            
-            grid.innerHTML = '';
-            
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-            
-            for (let i = 0; i < 42; i++) {
-                const date = new Date(startDate);
-                date.setDate(startDate.getDate() + i);
-                
-                const dayElement = document.createElement('div');
-                dayElement.className = 'calendar-day';
-                dayElement.textContent = date.getDate();
-                
-                if (date < today) {
-                    dayElement.classList.add('past');
-                } else if (date.getTime() === today.getTime()) {
-                    dayElement.classList.add('today');
-                } else if (date.getDay() === 0) {
-                    dayElement.classList.add('sunday');
-                }
-                
-                if (date.getTime() === selectedDate.getTime()) {
-                    dayElement.classList.add('selected');
-                }
-                
-                if (date.getMonth() === currentMonth) {
-                    dayElement.addEventListener('click', () => selectDate(date));
-                }
-                
-                grid.appendChild(dayElement);
-            }
-        }
+  function updateSelectedDay(){
+    const label=new Intl.DateTimeFormat('cs-CZ',{weekday:'long',day:'2-digit',month:'long',year:'numeric'}).format(selectedDate);
+    els.selectedDateLabel.textContent=label.charAt(0).toUpperCase()+label.slice(1);
+    dayEvents=rows.filter(ev=>intersectingWithDay(ev,selectedDate));
+    els.eventsLeft.innerHTML=''; els.noEvents.style.display=dayEvents.length? 'none':'block';
+    dayEvents.forEach((ev,idx)=>{
+      const card=document.createElement('div'); card.className='event-card'; if(idx===currentEventIndex && rotationPaused) card.classList.add('active');
+      const icon=document.createElement('div'); icon.className='event-icon'; icon.innerHTML=`<img alt="${ev.type||''}" src="${resolveIcon(ev.type)}">`;
+      const line1=document.createElement('div'); line1.className='line1';
+      const sd=fmtDateDMY(ev.start); const time=fmtTimeHM(ev.start); const ed=ev.end? fmtDateDMY(ev.end):''; const sep=ed?' - ':'';
+      line1.innerHTML=`<span class="date">${sd}</span> <span class="time">od ${time} hodin</span>${ed? ` <span class="date">${sep}${ed}</span>`:''}`;
+      const line2=document.createElement('div'); line2.className='line2'; line2.textContent=(ev.title||'').toUpperCase();
+      const body=document.createElement('div'); body.appendChild(line1); body.appendChild(line2);
+      card.appendChild(icon); card.appendChild(body);
+      card.addEventListener('click',()=>{ rotationPaused=true; currentEventIndex=idx; els.rightControls.style.display='flex'; showRight(ev); document.querySelectorAll('.event-card').forEach(el=>el.classList.remove('active')); card.classList.add('active'); });
+      els.eventsLeft.appendChild(card);
+    });
+    if(!rotationPaused){ startRotation(); }
+  }
 
-        function changeMonth(direction) {
-            currentMonth += direction;
-            if (currentMonth > 11) {
-                currentMonth = 0;
-                currentYear++;
-            } else if (currentMonth < 0) {
-                currentMonth = 11;
-                currentYear--;
-            }
-            renderCalendar();
-        }
+  function composeWhen(ev){ const wd=weekdayName(ev.start); const day=fmtDateDM(ev.start); const time=fmtTimeHM(ev.start); const tail=ev.end? ` do ${fmtDateDMY(ev.end)}`:''; return `${wd} ${day} od ${time} hodin${tail||''}`; }
+  function showRight(ev){
+    els.rightTitle.textContent=ev.title||''; els.rightWhen.textContent=composeWhen(ev); els.rightDesc.textContent=ev.desc||'';
+    const imgs=[ev.poster, ev.photo].filter(Boolean); let idx=0; function setImg(){ const url=imgs[idx]||''; const img=els.rightMedia.querySelector('img'); if(url){ img.src=url; img.alt=ev.title||'';} else { img.removeAttribute('src'); img.alt=''; } idx=(idx+1)%imgs.length; }
+    clearInterval(imgTimer); if(imgs.length>0){ setImg(); if(imgs.length>1){ imgTimer=setInterval(setImg,5000);} } else { els.rightMedia.querySelector('img').removeAttribute('src'); }
+  }
+  function startRotation(){ clearInterval(rotTimer); clearInterval(imgTimer); rotationPaused=false; els.rightControls.style.display='none'; currentEventIndex=0; if(dayEvents.length===0){ els.rightTitle.textContent='Žádné akce pro tento den'; els.rightWhen.textContent=''; els.rightDesc.textContent=''; els.rightMedia.querySelector('img').removeAttribute('src'); return; } function step(){ const ev=dayEvents[currentEventIndex%dayEvents.length]; showRight(ev); document.querySelectorAll('.event-card').forEach((el,i)=>{ el.classList.toggle('active', i===currentEventIndex); }); currentEventIndex=(currentEventIndex+1)%dayEvents.length; } step(); rotTimer=setInterval(step,10000); }
 
-        function selectDate(date) {
-            selectedDate = new Date(date);
-            renderCalendar();
-            updateCurrentDate();
-            updateEventsForDate();
-            
-            // Reset right panel rotation
-            isRightPanelLocked = false;
-            currentRightEventIndex = 0;
-            startRightPanelRotation();
-        }
+  els.resumeRotation.addEventListener('click',()=>{ rotationPaused=false; startRotation(); });
+  els.prevMonth.addEventListener('click',()=>{ currentMonth.setMonth(currentMonth.getMonth()-1); renderMonth(); });
+  els.nextMonth.addEventListener('click',()=>{ currentMonth.setMonth(currentMonth.getMonth()+1); renderMonth(); });
 
-        function updateCurrentDate() {
-            const dateElement = document.getElementById('currentDate');
-            const dayName = dayNames[selectedDate.getDay()];
-            const day = selectedDate.getDate();
-            const month = selectedDate.getMonth() + 1;
-            const year = selectedDate.getFullYear();
-            
-            dateElement.textContent = `${dayName} ${day}. ${month}. ${year}`;
-        }
+  let tickerIndex=0, tickerTimer=null; function startTicker(){ if(infoStripe.length===0){ els.tickerMsg.textContent='—'; return; } function step(){ els.tickerMsg.textContent=infoStripe[tickerIndex%infoStripe.length]; tickerIndex=(tickerIndex+1)%infoStripe.length; } step(); clearInterval(tickerTimer); tickerTimer=setInterval(step,5000); }
 
-        function updateEventsForDate() {
-            const eventsSection = document.getElementById('eventsSection');
-            const selectedDateStr = selectedDate.toISOString().split('T')[0];
-            
-            const dayEvents = eventsData.filter(event => {
-                const eventStartDate = new Date(event.startDate).toISOString().split('T')[0];
-                const eventEndDate = event.endDate ? new Date(event.endDate).toISOString().split('T')[0] : eventStartDate;
-                
-                return selectedDateStr >= eventStartDate && selectedDateStr <= eventEndDate;
-            });
-            
-            eventsSection.innerHTML = '';
-            
-            dayEvents.forEach((event, index) => {
-                const eventElement = document.createElement('div');
-                eventElement.className = 'event-item';
-                
-                const startDate = new Date(event.startDate);
-                const endDate = event.endDate ? new Date(event.endDate) : null;
-                
-                const startDateStr = `${startDate.getDate()}. ${String(startDate.getMonth() + 1).padStart(2, '0')}. ${startDate.getFullYear()}`;
-                const endDateStr = endDate ? `${endDate.getDate()}. ${String(endDate.getMonth() + 1).padStart(2, '0')}. ${endDate.getFullYear()}` : '';
-                
-                const timeStr = event.startTime ? `od ${event.startTime.substring(0, 5)} hodin` : '';
-                
-                eventElement.innerHTML = `
-                    <div>
-                        <img src="${typeIcons[event.type] || typeIcons['jiné']}" alt="${event.type}" class="event-icon">
-                        <span class="event-date">${startDateStr}</span>
-                        <span class="event-time">${timeStr}</span>
-                        ${endDateStr ? `<span class="event-date"> - ${endDateStr}</span>` : ''}
-                    </div>
-                    <div class="event-title">${event.title}</div>
-                `;
-                
-                eventElement.addEventListener('click', () => {
-                    // Remove active class from all events
-                    document.querySelectorAll('.event-item').forEach(el => el.classList.remove('active'));
-                    eventElement.classList.add('active');
-                    
-                    // Lock right panel and show this event
-                    isRightPanelLocked = true;
-                    showEventInRightPanel(event);
-                });
-                
-                eventsSection.appendChild(eventElement);
-            });
-        }
-
-        function showEventInRightPanel(event) {
-            const rightContent = document.getElementById('rightContent');
-            
-            const startDate = new Date(event.startDate);
-            const endDate = event.endDate ? new Date(event.endDate) : null;
-            const dayName = dayNames[startDate.getDay()];
-            
-            const startDateStr = `${dayName} ${startDate.getDate()}. ${String(startDate.getMonth() + 1).padStart(2, '0')}.`;
-            const timeStr = event.startTime ? `od ${event.startTime.substring(0, 5)} hodin` : '';
-            const endDateStr = endDate ? `do ${endDate.getDate()}. ${String(endDate.getMonth() + 1).padStart(2, '0')}. ${endDate.getFullYear()}` : '';
-            
-            const imageUrl = event.poster || event.photo || '';
-            
-            rightContent.innerHTML = `
-                <div class="right-event-content">
-                    <div class="right-event-title">${event.title}</div>
-                    <div class="right-event-separator"></div>
-                    <div class="right-event-date">${startDateStr} ${timeStr} ${endDateStr}</div>
-                    ${imageUrl ? `<img src="${imageUrl}" alt="${event.title}" class="right-event-poster">` : ''}
-                    ${event.description ? `<div class="right-event-description">${event.description}</div>` : ''}
-                </div>
-            `;
-        }
-
-        function startRightPanelRotation() {
-            if (rightPanelInterval) {
-                clearInterval(rightPanelInterval);
-            }
-            
-            rightPanelInterval = setInterval(() => {
-                if (!isRightPanelLocked) {
-                    const selectedDateStr = selectedDate.toISOString().split('T')[0];
-                    const dayEvents = eventsData.filter(event => {
-                        const eventStartDate = new Date(event.startDate).toISOString().split('T')[0];
-                        const eventEndDate = event.endDate ? new Date(event.endDate).toISOString().split('T')[0] : eventStartDate;
-                        
-                        return selectedDateStr >= eventStartDate && selectedDateStr <= eventEndDate;
-                    });
-                    
-                    if (dayEvents.length > 0) {
-                        showEventInRightPanel(dayEvents[currentRightEventIndex]);
-                        currentRightEventIndex = (currentRightEventIndex + 1) % dayEvents.length;
-                    }
-                }
-            }, 10000);
-        }
-
-        function startInfoBarRotation() {
-            const infoBarContent = document.getElementById('infoBarContent');
-            const infoBarMessages = eventsData
-                .filter(event => event.infoBar && event.infoBar.trim())
-                .map(event => event.infoBar);
-            
-            if (infoBarMessages.length === 0) {
-                infoBarContent.textContent = 'ODEBÍREJTE NÁŠ INSTAGRAM, AŤ VÁM NIC NEUNIKNE!';
-                return;
-            }
-            
-            let currentInfoIndex = 0;
-            
-            function updateInfoBar() {
-                infoBarContent.style.opacity = '0';
-                setTimeout(() => {
-                    infoBarContent.textContent = infoBarMessages[currentInfoIndex];
-                    infoBarContent.style.opacity = '1';
-                    currentInfoIndex = (currentInfoIndex + 1) % infoBarMessages.length;
-                }, 250);
-            }
-            
-            updateInfoBar();
-            infoBarInterval = setInterval(updateInfoBar, 5000);
-        }
-
-        // Initialize
-        document.addEventListener('DOMContentLoaded', () => {
-            loadData();
-        });
-    </script>
+  async function load(){ try{ const res=await fetch(XLSX_URL); const buf=await res.arrayBuffer(); const wb=XLSX.read(buf,{type:'array',cellDates:true}); rows=parseSheetToRows(wb); }catch(e){ console.error(e); rows=[]; } renderMonth(); updateSelectedDay(); startTicker(); }
+  load();
+})();
+</script>
 </body>
 </html>
